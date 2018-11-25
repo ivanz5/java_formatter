@@ -9,6 +9,10 @@ class IndentsFormatter:
     def __init__(self, config):
         self.config = config
 
+    def _decrease_next_level(self):
+        if self._current_level > 0:
+            self._next_level = self._current_level - 1
+
     def iterate(self):
         self._current_level = self._next_level
 
@@ -16,7 +20,7 @@ class IndentsFormatter:
         self._next_level = self._current_level + 1
 
     def found_closing_brace(self):
-        self._next_level = self._current_level - 1
+        self._decrease_next_level()
         self.iterate()
 
     # Single command if, while, for
@@ -38,7 +42,7 @@ class IndentsFormatter:
         # 'break' after 'case'
         if self._case_opened:
             self._case_opened = False
-            self._next_level = self._current_level - 1
+            self._decrease_next_level()
 
     def format_line(self, line):
         indent = ' ' * self._current_level * self.config.indent_size

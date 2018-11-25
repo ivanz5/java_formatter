@@ -167,17 +167,8 @@ class Formatter:
         # Write prefix (already found part)
         prefix = prefix.strip()
         self.current_line += prefix
-        # Search for semicolon (simple if, while, etc. statement)
-        # Semicolon search must be before brace search in order to work correctly with case :... break;
-        semicolon_search = re.search(r';', line)
-        if semicolon_search is not None:
-            s = line[:semicolon_search.start() + 1].strip() + '\n'
-            line = line[semicolon_search.start() + 1:]
-            self.current_line += s
-            self.remainder = line
-            self.indent_formatter.found_simple_operator(prefix == "")
-            return
         # Search for opening brace
+        # Semicolon search must be before brace search in order to work correctly;
         brace_search = re.search(r'{', line)
         if brace_search is not None:
             s = line[:brace_search.start() + 1].strip() + '\n'
@@ -185,6 +176,15 @@ class Formatter:
             self.current_line += s
             self.remainder = line
             self.indent_formatter.found_brace()
+            return
+        # Search for semicolon (simple if, while, etc. statement)
+        semicolon_search = re.search(r';', line)
+        if semicolon_search is not None:
+            s = line[:semicolon_search.start() + 1].strip() + '\n'
+            line = line[semicolon_search.start() + 1:]
+            self.current_line += s
+            self.remainder = line
+            self.indent_formatter.found_simple_operator(prefix == "")
         # Continue search on new line
         else:
             line = line.strip()
