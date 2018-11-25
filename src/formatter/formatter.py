@@ -44,9 +44,11 @@ class Formatter:
         self.out.write(self.current_line + '\n')
         self.out.flush()  # for debug
         self.current_line = ""
+        self.remainder = self.remainder.strip()
 
     def process_line(self, line_num, line):
-        self.process_if(line_num, line)
+        self.process_keyword_parentheses(line_num, line)
+        self.process_do(line_num, line)
         self.process_closing_brace(line_num, line)
         if self.current_line == "":
             self.current_line = line.strip()
@@ -54,21 +56,41 @@ class Formatter:
         self.indent_formatter.iterate()
         # return line
 
-    def process_if(self, line_num, line):
-        if_search = re.search(regex.IF_GENERAL, line)
-        # Found pattern like if with opening brace '('
-        if if_search is not None:
-            prefix = if_search.group()
-            line = line[if_search.end():]
+    def process_keyword_parentheses(self, line_num, line):
+        """
+        Process such constructions:
+        if, while, switch
+        """
+        patterns = [regex.IF, regex.WHILE, regex.SWITCH]
+        self.process_general_construction(patterns, line)
+
+    def process_do(self, line_num, line):
+        search = re.search(regex.DO, line)
+        # When found a match, remove '{' if present so it could be correctly processed later
+        if search is not None:
+            prefix = search.group().strip()
+            if '{' in prefix:
+                prefix = prefix.replace('{', '')
+                line = '{' + line[search.end():]
+            else:
+                line = line[search.end():]
             self.handle_curly_brace_line(prefix, line)
-            # print prefix, ":", line
-        # try to find if with braces on new line
-        if_search = re.search(regex.IF_NEWLINE, line)
-        if if_search is not None:
-            print "IF %d:%d %s" % (line_num, if_search.start(), if_search.group().replace("\n", ""))
-            prefix = if_search.group().strip()
-            line = line[if_search.end():]
-            self.handle_curly_brace_line(prefix, line)
+
+    def process_general_construction(self, patterns, line):
+        """
+        Process constructions like 'keyword (', including wrapped on new lines.
+        Such as: if, for, while
+        :param patterns: list of regex patterns to match constructions
+        :param line: line to search in
+        :return: None
+        """
+        for pattern in patterns:
+            search = re.search(pattern, line)
+            # When found a match, remember it and pass next to parse up to '{' or ';'
+            if search is not None:
+                prefix = search.group().strip()
+                line = line[search.end():]
+                self.handle_curly_brace_line(prefix, line)
 
     def process_closing_brace(self, line_num, line):
         line = line.strip()
@@ -81,7 +103,7 @@ class Formatter:
 
     def handle_curly_brace_line(self, prefix, line):
         # Write prefix (already found part)
-        prefix.strip()
+        prefix = prefix.strip()
         ####self.out.write(prefix)
         self.current_line += prefix
         # Search for opening brace
