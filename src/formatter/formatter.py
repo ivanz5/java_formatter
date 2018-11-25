@@ -50,6 +50,7 @@ class Formatter:
         self.process_keyword_parentheses(line_num, line)
         self.process_do(line_num, line)
         self.process_for(line_num, line)
+        self.process_case(line_num, line)
         self.process_closing_brace(line_num, line)
         if self.current_line == "":
             self.current_line = line.strip()
@@ -100,6 +101,59 @@ class Formatter:
                 line = line[search.end():]
                 self.handle_curly_brace_line(prefix, line)
 
+    def process_case(self, line_num, line):
+        search = re.search(regex.CASE, line)
+        if search is not None:
+            prefix = search.group().strip()
+            line = line[search.end():]
+            # 'case:'
+            if ':' in prefix:
+                # 'case ...: ...; break;'. Do not wrap lines.
+                break_search = re.search(regex.BREAK, line)
+                if break_search is not None:
+                    prefix += line[:break_search.end() + 1]
+                    line = line[break_search.end() + 1:]
+                    # Entire expression found
+                    if prefix[len(prefix) - 1] == ';':
+                        self.current_line = prefix
+                        self.remainder = line
+                    # Semicolon is missing
+                    else:
+                        self.handle_curly_brace_line(prefix, line)
+                # 'case ...: ...\n'
+                else:
+                    self.current_line = prefix
+                    self.remainder = line
+                    self.indent_formatter.found_case()
+            # 'case'. Colon is missing. Try to find it on next lines.
+            else:
+                line = self.gen_input.next()
+                search = re.search(':', line)
+                # Add anything before ':' to current line with 'case'
+                while search is None:
+                    prefix += ' ' + line.strip()
+                    line = self.gen_input.next()
+                    search = re.search(':', line)
+                prefix += ' ' + line[:search.start() + 1].strip()
+                self.current_line += prefix
+                self.remainder = line[search.start() + 1:]
+                self.indent_formatter.found_case()
+            return
+        # Search 'break'
+        search = re.search(regex.BREAK, line)
+        if search is not None:
+            prefix = search.group().strip()
+            line = line[search.end():]
+            # 'break;'
+            if ';' in prefix:
+                self.indent_formatter.found_break()
+                self.current_line = prefix
+                self.remainder = line
+            # Semicolon is missing. Find it.
+            else:
+                self.handle_curly_brace_line(prefix, line)
+                self.indent_formatter.found_break()
+
     def process_closing_brace(self, line_num, line):
         line = line.strip()
         brace_search = re.match(regex.CLOSING_BRACE, line)
@@ -113,6 +167,16 @@ class Formatter:
         # Write prefix (already found part)
         prefix = prefix.strip()
         self.current_line += prefix
+        # Search for semicolon (simple if, while, etc. statement)
+        # Semicolon search must be before brace search in order to work correctly with case :... break;
+        semicolon_search = re.search(r';', line)
+        if semicolon_search is not None:
+            s = line[:semicolon_search.start() + 1].strip() + '\n'
+            line = line[semicolon_search.start() + 1:]
+            self.current_line += s
+            self.remainder = line
+            self.indent_formatter.found_simple_operator(prefix == "")
+            return
         # Search for opening brace
         brace_search = re.search(r'{', line)
         if brace_search is not None:
@@ -121,15 +185,6 @@ class Formatter:
             self.current_line += s
             self.remainder = line
             self.indent_formatter.found_brace()
-            return
-        # Search for semicolon (simple if, while, etc. statement)
-        semicolon_search = re.search(r';', line)
-        if semicolon_search is not None:
-            s = line[:semicolon_search.start() + 1].strip() + '\n'
-            line = line[semicolon_search.start() + 1:]
-            self.current_line += s
-            self.remainder = line
-            self.indent_formatter.found_simple_operator(prefix == "")
         # Continue search on new line
         else:
             line = line.strip()
