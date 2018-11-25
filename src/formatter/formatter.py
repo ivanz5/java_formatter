@@ -49,6 +49,7 @@ class Formatter:
     def process_line(self, line_num, line):
         self.process_keyword_parentheses(line_num, line)
         self.process_do(line_num, line)
+        self.process_for(line_num, line)
         self.process_closing_brace(line_num, line)
         if self.current_line == "":
             self.current_line = line.strip()
@@ -75,6 +76,13 @@ class Formatter:
             else:
                 line = line[search.end():]
             self.handle_curly_brace_line(prefix, line)
+
+    def process_for(self, line_num, line):
+        search = re.search(regex.FOR, line)
+        if search is not None:
+            prefix = search.group().strip()
+            line = line[search.end():]
+            self.handle_for(line, prefix, 0)
 
     def process_general_construction(self, patterns, line):
         """
@@ -104,7 +112,6 @@ class Formatter:
     def handle_curly_brace_line(self, prefix, line):
         # Write prefix (already found part)
         prefix = prefix.strip()
-        ####self.out.write(prefix)
         self.current_line += prefix
         # Search for opening brace
         brace_search = re.search(r'{', line)
@@ -113,7 +120,6 @@ class Formatter:
             line = line[brace_search.start() + 1:]
             self.current_line += s
             self.remainder = line
-            #self.write_line()
             self.indent_formatter.found_brace()
             return
         # Search for semicolon (simple if, while, etc. statement)
@@ -123,7 +129,6 @@ class Formatter:
             line = line[semicolon_search.start() + 1:]
             self.current_line += s
             self.remainder = line
-            #self.write_line()
             self.indent_formatter.found_simple_operator(prefix == "")
         # Continue search on new line
         else:
@@ -131,3 +136,30 @@ class Formatter:
             self.current_line += line
             line = self.gen_input.next()
             self.handle_curly_brace_line("", line)
+
+    def handle_for(self, line, saved_line, semicolons_count):
+        # Colon search, structure: 'for (Object o : iterable)
+        # Colon search must be before semicolon search
+        colon_search = re.search(r':', line)
+        if colon_search is not None:
+            saved_line += line[:colon_search.start() + 1].strip() + ' '
+            line = line[colon_search.start() + 1:]
+            # Found colon. Process remainder like general operator (if, while, etc.).
+            self.handle_curly_brace_line(saved_line, line)
+            return
+        # Semicolon search, structure: 'for ( ; ; )
+        semicolon_search = re.search(r';', line)
+        if semicolon_search is not None:
+            saved_line += line[:semicolon_search.start() + 1].strip() + ' '
+            line = line[semicolon_search.start() + 1:]
+            # Found second semicolon. Process remainder like general operator (if, while, etc.).
+            if semicolons_count == 1:
+                self.handle_curly_brace_line(saved_line, line)
+            # Found first semicolon. Continue search to find second.
+            else:
+                self.handle_for(line, saved_line, 1)
+            return
+        # Neither ';' not ':' found. Search in next line.
+        saved_line += line.strip() + ' '
+        line = self.gen_input.next()
+        self.handle_for(line, saved_line, semicolons_count)
