@@ -1,4 +1,7 @@
-import formatter.main as frm
+import formatter.formatter as frm
 
 
-frm.format_file("../java_files/input.java")
+inp = "../java_files/input.java"
+out = "../java_files/output.java"
+formatter = frm.Formatter(inp, out)
+formatter.format_file()
