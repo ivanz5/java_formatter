@@ -1,5 +1,6 @@
 import re
 import regex_consts as regex
+import indents_formatter
 
 
 class Formatter:
@@ -9,8 +10,13 @@ class Formatter:
     remainder = str()
     # Iterator for input lines
     gen_input = iter("")
+    # Line buffer for output
+    current_line = str()
 
-    def __init__(self, input_filename, output_filename):
+    def __init__(self, config, input_filename, output_filename):
+        self.config = config
+        self.indent_formatter = indents_formatter.IndentsFormatter(config)
+        print config.indent_size, config.indent_top_level_class
         f = open(input_filename, "r")
         self.content = f.readlines()
         f.close()
@@ -33,6 +39,11 @@ class Formatter:
                 yield s
             yield line
 
+    def write_line(self):
+        self.current_line = self.indent_formatter.format_line(self.current_line)
+        self.out.write(self.current_line + '\n')
+        self.current_line = ""
+
     def process_line(self, line_num, line):
         line = self.process_if(line_num, line)
         # return line
@@ -49,21 +60,38 @@ class Formatter:
         if_search = re.search(regex.IF_NEWLINE, line)
         if if_search is not None:
             print "IF %d:%d %s" % (line_num, if_search.start(), if_search.group().replace("\n", ""))
+            prefix = if_search.group().strip()
+            line = line[if_search.end():]
+            self.handle_curly_brace_line(prefix, line)
         return line
 
     def handle_curly_brace_line(self, prefix, line):
-        self.out.write(prefix)
-        print prefix
+        # Write prefix (already found part)
+        prefix.strip()
+        ####self.out.write(prefix)
+        self.current_line += prefix
+        # Search for opening brace
         brace_search = re.search(r'{', line)
         if brace_search is not None:
             s = line[:brace_search.start() + 1].strip() + '\n'
             line = line[brace_search.start() + 1:]
-            self.out.write(s)
-            print s
-            remainder = line
+            self.current_line += s
+            self.remainder = line
+            self.write_line()
+            self.indent_formatter.found_brace()
+            return
+        # Search for semicolon (simple if, while, etc. statement)
+        semicolon_search = re.search(r';', line)
+        if semicolon_search is not None:
+            s = line[:semicolon_search.start() + 1].strip() + '\n'
+            line = line[semicolon_search.start() + 1:]
+            self.current_line += s
+            self.remainder = line
+            self.write_line()
+            self.indent_formatter.found_simple_operator(prefix == "")
+        # Continue search on new line
         else:
             line = line.strip()
-            self.out.write(line)
-            print line
+            self.current_line += line
             line = self.gen_input.next()
             self.handle_curly_brace_line("", line)
