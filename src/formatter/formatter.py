@@ -42,10 +42,16 @@ class Formatter:
     def write_line(self):
         self.current_line = self.indent_formatter.format_line(self.current_line)
         self.out.write(self.current_line + '\n')
+        self.out.flush()  # for debug
         self.current_line = ""
 
     def process_line(self, line_num, line):
-        line = self.process_if(line_num, line)
+        self.process_if(line_num, line)
+        self.process_closing_brace(line_num, line)
+        if self.current_line == "":
+            self.current_line = line.strip()
+        self.write_line()
+        self.indent_formatter.iterate()
         # return line
 
     def process_if(self, line_num, line):
@@ -63,7 +69,15 @@ class Formatter:
             prefix = if_search.group().strip()
             line = line[if_search.end():]
             self.handle_curly_brace_line(prefix, line)
-        return line
+
+    def process_closing_brace(self, line_num, line):
+        line = line.strip()
+        brace_search = re.match(regex.CLOSING_BRACE, line)
+        # Found closing brace
+        if brace_search is not None:
+            self.current_line = brace_search.group()
+            self.remainder = line[brace_search.start() + 1:]
+            self.indent_formatter.found_closing_brace()
 
     def handle_curly_brace_line(self, prefix, line):
         # Write prefix (already found part)
@@ -77,7 +91,7 @@ class Formatter:
             line = line[brace_search.start() + 1:]
             self.current_line += s
             self.remainder = line
-            self.write_line()
+            #self.write_line()
             self.indent_formatter.found_brace()
             return
         # Search for semicolon (simple if, while, etc. statement)
@@ -87,7 +101,7 @@ class Formatter:
             line = line[semicolon_search.start() + 1:]
             self.current_line += s
             self.remainder = line
-            self.write_line()
+            #self.write_line()
             self.indent_formatter.found_simple_operator(prefix == "")
         # Continue search on new line
         else:
