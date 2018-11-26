@@ -48,7 +48,7 @@ class Formatter:
 
     def process_line(self, line_num, line):
         self.process_keyword_parentheses(line_num, line)
-        self.process_do(line_num, line)
+        self.process_keyword_braces(line_num, line)
         self.process_for(line_num, line)
         self.process_case(line_num, line, False)  # 'case'
         self.process_case(line_num, line, True)  # 'default'
@@ -67,8 +67,13 @@ class Formatter:
         patterns = [regex.IF, regex.WHILE, regex.SWITCH]
         self.process_general_construction(patterns, line)
 
-    def process_do(self, line_num, line):
-        search = re.search(regex.DO, line)
+    def process_keyword_braces(self, line_num, line):
+        self.process_general_construction_brace(regex.DO, line)
+        self.process_general_construction_brace(regex.ELSE, line)
+        self.process_general_construction_brace(regex.FINALLY, line)
+
+    def process_general_construction_brace(self, pattern, line):
+        search = re.search(pattern, line)
         # When found a match, remove '{' if present so it could be correctly processed later
         if search is not None:
             prefix = search.group().strip()

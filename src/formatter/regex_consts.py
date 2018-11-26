@@ -6,6 +6,8 @@ FOR = r'(^|\s+|;|{|})for\s*(\(|\n)'
 SWITCH = r'(^|\s+|;|{|})switch\s*(\(|\n)'
 
 DO = r'(^|\s+|;|{|})do\s*(\n|{)'
+ELSE = r'(^|\s+|;|{|})else\s*(\n|{)'
+FINALLY = r'(^|\s+|;|{|})finally\s*(\n|{)'
 
 CASE = r'(^|\s+|;|{|})case(\n|\s+(.*:|.*\n))'
 BREAK = r'(^|\s+|;|{|})break\s*(;|\n)'
