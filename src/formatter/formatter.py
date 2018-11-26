@@ -50,7 +50,8 @@ class Formatter:
         self.process_keyword_parentheses(line_num, line)
         self.process_do(line_num, line)
         self.process_for(line_num, line)
-        self.process_case(line_num, line)
+        self.process_case(line_num, line, False)  # 'case'
+        self.process_case(line_num, line, True)  # 'default'
         self.process_closing_brace(line_num, line)
         if self.current_line == "":
             self.current_line = line.strip()
@@ -99,10 +100,14 @@ class Formatter:
             if search is not None:
                 prefix = search.group().strip()
                 line = line[search.end():]
+                if "switch" in prefix:
+                    self.indent_formatter.found_switch()
                 self.handle_curly_brace_line(prefix, line)
 
-    def process_case(self, line_num, line):
-        search = re.search(regex.CASE, line)
+    def process_case(self, line_num, line, process_default):
+        # Choose 'case' or 'default' construction
+        exp = regex.DEFAULT if process_default else regex.CASE
+        search = re.search(exp, line)
         if search is not None:
             prefix = search.group().strip()
             line = line[search.end():]
