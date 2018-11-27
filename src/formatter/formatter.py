@@ -47,28 +47,38 @@ class Formatter:
         self.remainder = self.remainder.strip()
 
     def process_line(self, line_num, line):
-        if self.process_keyword_braces(line_num, line) is not True:
-            self.process_keyword_parentheses(line_num, line)
-            self.process_for(line_num, line)
-            self.process_case(line_num, line, False)  # 'case'
-            self.process_case(line_num, line, True)  # 'default'
-            self.process_closing_brace(line_num, line)
+        if self.process_closing_brace(line_num, line):
+            # Do not write line because handling of '} keyword' will not be done
+            # self.process_line_write(line)
+            return
+        if self.process_keyword_braces(line_num, line):
+            self.process_line_write(line)
+            return
+        self.process_keyword_parentheses(line_num, line)
+        self.process_for(line_num, line)
+        self.process_case(line_num, line, False)  # 'case'
+        self.process_case(line_num, line, True)  # 'default'
+        self.process_line_write(line)
+
+    def process_line_write(self, line):
         if self.current_line == "":
             self.current_line = line.strip()
         self.write_line()
         self.indent_formatter.iterate()
-        # return line
 
     def process_keyword_parentheses(self, line_num, line):
         """
         Process such constructions:
         if, while, switch
         """
-        patterns = [regex.IF, regex.WHILE, regex.SWITCH]
+        patterns = [regex.IF, regex.WHILE, regex.SWITCH, regex.CATCH, regex.TRY_RESOURCES]
         self.process_general_construction(patterns, line)
 
     def process_keyword_braces(self, line_num, line):
         found = self.process_general_construction_brace(regex.DO, line)
+        if found:
+            return True
+        found = self.process_general_construction_brace(regex.TRY, line)
         if found:
             return True
         found = self.process_general_construction_brace(regex.ELSE, line)
@@ -181,6 +191,7 @@ class Formatter:
             self.current_line = brace_search.group()
             self.remainder = line[brace_search.start() + 1:]
             self.indent_formatter.found_closing_brace()
+            return True
 
     def handle_curly_brace_line(self, prefix, line):
         # Write prefix (already found part)
