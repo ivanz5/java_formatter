@@ -47,12 +47,12 @@ class Formatter:
         self.remainder = self.remainder.strip()
 
     def process_line(self, line_num, line):
-        self.process_keyword_parentheses(line_num, line)
-        self.process_keyword_braces(line_num, line)
-        self.process_for(line_num, line)
-        self.process_case(line_num, line, False)  # 'case'
-        self.process_case(line_num, line, True)  # 'default'
-        self.process_closing_brace(line_num, line)
+        if self.process_keyword_braces(line_num, line) is not True:
+            self.process_keyword_parentheses(line_num, line)
+            self.process_for(line_num, line)
+            self.process_case(line_num, line, False)  # 'case'
+            self.process_case(line_num, line, True)  # 'default'
+            self.process_closing_brace(line_num, line)
         if self.current_line == "":
             self.current_line = line.strip()
         self.write_line()
@@ -68,9 +68,17 @@ class Formatter:
         self.process_general_construction(patterns, line)
 
     def process_keyword_braces(self, line_num, line):
-        self.process_general_construction_brace(regex.DO, line)
-        self.process_general_construction_brace(regex.ELSE, line)
-        self.process_general_construction_brace(regex.FINALLY, line)
+        found = self.process_general_construction_brace(regex.DO, line)
+        if found:
+            return True
+        found = self.process_general_construction_brace(regex.ELSE, line)
+        if found:
+            return True
+        found = self.process_general_construction_brace(regex.FINALLY, line)
+        if found:
+            return True
+        #if 'else' in self.current_line and 'if' in self.current_line:
+        #    self.write_line()
 
     def process_general_construction_brace(self, pattern, line):
         search = re.search(pattern, line)
@@ -83,6 +91,7 @@ class Formatter:
             else:
                 line = line[search.end():]
             self.handle_curly_brace_line(prefix, line)
+            return True
 
     def process_for(self, line_num, line):
         search = re.search(regex.FOR, line)
@@ -181,7 +190,7 @@ class Formatter:
         # Semicolon search must be before brace search in order to work correctly;
         brace_search = re.search(r'{', line)
         if brace_search is not None:
-            s = line[:brace_search.start() + 1].strip() + '\n'
+            s = line[:brace_search.start() + 1].strip()
             line = line[brace_search.start() + 1:]
             self.current_line += s
             self.remainder = line
@@ -190,7 +199,7 @@ class Formatter:
         # Search for semicolon (simple if, while, etc. statement)
         semicolon_search = re.search(r';', line)
         if semicolon_search is not None:
-            s = line[:semicolon_search.start() + 1].strip() + '\n'
+            s = line[:semicolon_search.start() + 1].strip()
             line = line[semicolon_search.start() + 1:]
             self.current_line += s
             self.remainder = line
@@ -198,7 +207,7 @@ class Formatter:
         # Continue search on new line
         else:
             line = line.strip()
-            self.current_line += line
+            self.current_line += ' ' + line
             line = self.gen_input.next()
             self.handle_curly_brace_line("", line)
 
