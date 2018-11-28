@@ -11,6 +11,7 @@ DO = r'(^|\s+|;|{|})do\s*(\n|{)'
 TRY = r'(^|\s+|;|{|})try\s*(\n|{)'
 ELSE = r'(^|\s+|;|{|})else(\s+|\s*(\n|{))'
 FINALLY = r'(^|\s+|;|{|})finally\s*(\n|{)'
+SYNCHRONIZED = r'(^|\s+|;|{|})synchronized\s*(\n|{)'
 
 CASE = r'(^|\s+|;|{|})case(\n|\s+(.*:|.*\n))'
 BREAK = r'(^|\s+|;|{|})break\s*(;|\n)'

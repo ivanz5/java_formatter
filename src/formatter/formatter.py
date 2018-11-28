@@ -90,17 +90,15 @@ class Formatter:
             return True
 
     def process_keyword_braces(self, line_num, line):
-        found = self.process_general_construction_brace(regex.DO, line)
-        if found:
+        if self.process_general_construction_brace(regex.DO, line):
             return True
-        found = self.process_general_construction_brace(regex.TRY, line)
-        if found:
+        if self.process_general_construction_brace(regex.TRY, line):
             return True
-        found = self.process_general_construction_brace(regex.ELSE, line)
-        if found:
+        if self.process_general_construction_brace(regex.ELSE, line):
             return True
-        found = self.process_general_construction_brace(regex.FINALLY, line)
-        if found:
+        if self.process_general_construction_brace(regex.FINALLY, line):
+            return True
+        if self.process_general_construction_brace(regex.SYNCHRONIZED, line):
             return True
         # if 'else' in self.current_line and 'if' in self.current_line:
         #    self.write_line()
