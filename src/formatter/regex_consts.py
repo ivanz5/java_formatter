@@ -15,3 +15,6 @@ FINALLY = r'(^|\s+|;|{|})finally\s*(\n|{)'
 CASE = r'(^|\s+|;|{|})case(\n|\s+(.*:|.*\n))'
 BREAK = r'(^|\s+|;|{|})break\s*(;|\n)'
 DEFAULT = r'(^|\s+|;|{|})default\s*(:|\n)'
+
+MODIFIER = r'(^|\s+)(public|private|protected|transient|volatile|final|static|synchronized)(\n|\s+)'
+CLASS_INTERFACE_ENUM = r'(^|\s+)(class|interface|enum)(\n|\s+)'

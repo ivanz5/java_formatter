@@ -10,6 +10,11 @@ class IndentsFormatter:
     _switch_indent = 0
     _switch_braces = 0
 
+    _class_found = False
+    _interface_found = False
+    _enum_found = False
+    _method_found = False
+
     def __init__(self, config):
         self.config = config
 
@@ -61,6 +66,22 @@ class IndentsFormatter:
         if self._case_opened:
             self._case_opened = False
             self._decrease_next_level()
+
+    def found_class(self):
+        self._class_found = True
+        self._next_level = self._current_level + 1
+
+    def found_interface(self):
+        self._interface_found = True
+        self._next_level = self._current_level + 1
+
+    def found_enum(self):
+        self._enum_found = True
+        self._next_level = self._current_level + 1
+
+    def found_method(self):
+        self._method_found = True
+        self._next_level = self._current_level + 1
 
     def format_line(self, line):
         indent = ' ' * self._current_level * self.config.indent_size

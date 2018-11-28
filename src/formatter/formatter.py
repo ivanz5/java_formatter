@@ -30,12 +30,15 @@ class Formatter:
         for line in self.gen_input:
             self.process_line(line_num, line)
             line_num += 1
+        # Write what is left
+        if self.current_line != '':
+            self.write_line()
 
     def next_input(self):
         for line in self.content:
-            if self.remainder is not "":
+            while self.remainder is not '':
                 s = self.remainder
-                self.remainder = ""
+                self.remainder = ''
                 yield s
             yield line
 
@@ -54,14 +57,25 @@ class Formatter:
         if self.process_keyword_braces(line_num, line):
             self.process_line_write(line)
             return
-        self.process_keyword_parentheses(line_num, line)
-        self.process_for(line_num, line)
-        self.process_case(line_num, line, False)  # 'case'
-        self.process_case(line_num, line, True)  # 'default'
+        if self.process_keyword_parentheses(line_num, line):
+            self.process_line_write(line)
+            return
+        if self.process_for(line_num, line):
+            self.process_line_write(line)
+            return
+        if self.process_case(line_num, line, False):  # 'case'
+            self.process_line_write(line)
+            return
+        if self.process_case(line_num, line, True):  # 'default'
+            self.process_line_write(line)
+            return
+        if self.process_field_class_method(line_num, line):
+            self.process_line_write(line)
+            return
         self.process_line_write(line)
 
     def process_line_write(self, line):
-        if self.current_line == "":
+        if self.current_line == '':
             self.current_line = line.strip()
         self.write_line()
         self.indent_formatter.iterate()
@@ -72,7 +86,8 @@ class Formatter:
         if, while, switch
         """
         patterns = [regex.IF, regex.WHILE, regex.SWITCH, regex.CATCH, regex.TRY_RESOURCES]
-        self.process_general_construction(patterns, line)
+        if self.process_general_construction(patterns, line):
+            return True
 
     def process_keyword_braces(self, line_num, line):
         found = self.process_general_construction_brace(regex.DO, line)
@@ -87,7 +102,7 @@ class Formatter:
         found = self.process_general_construction_brace(regex.FINALLY, line)
         if found:
             return True
-        #if 'else' in self.current_line and 'if' in self.current_line:
+        # if 'else' in self.current_line and 'if' in self.current_line:
         #    self.write_line()
 
     def process_general_construction_brace(self, pattern, line):
@@ -109,6 +124,7 @@ class Formatter:
             prefix = search.group().strip()
             line = line[search.end():]
             self.handle_for(line, prefix, 0)
+            return True
 
     def process_general_construction(self, patterns, line):
         """
@@ -127,6 +143,7 @@ class Formatter:
                 if "switch" in prefix:
                     self.indent_formatter.found_switch()
                 self.handle_curly_brace_line(prefix, line)
+                return True
 
     def process_case(self, line_num, line, process_default):
         # Choose 'case' or 'default' construction
@@ -167,7 +184,7 @@ class Formatter:
                 self.current_line += prefix
                 self.remainder = line[search.start() + 1:]
                 self.indent_formatter.found_case()
-            return
+            return True
         # Search 'break'
         search = re.search(regex.BREAK, line)
         if search is not None:
@@ -182,13 +199,73 @@ class Formatter:
             else:
                 self.handle_curly_brace_line(prefix, line)
                 self.indent_formatter.found_break()
+            return True
+
+    def process_field_class_method(self, line_num, line):
+        # state = 1: modifiers list (public, private, protected, static, final,
+        # synchronized, transient)
+        # state = 2: class or interface definition (class or interface keyword found)
+        # state = 3: method, field or statement definition
+        state = 0
+        out_line = ''
+        while True:
+            if state == 0 or state == 1:
+                modifier_search = re.match(regex.MODIFIER, line)
+                if modifier_search is not None:
+                    out_line += modifier_search.group().strip() + ' '
+                    line = line[modifier_search.end():]
+                    state = 1
+                    continue
+                class_search = re.match(regex.CLASS_INTERFACE_ENUM, line)
+                if class_search is not None:
+                    out_line += class_search.group().strip() + ' '
+                    line = line[class_search.end():]
+                    state = 2
+                    continue
+                # Nothing found at this line
+                if state == 0 and line.strip() == '':
+                    return False
+                # Can't be class, interface or enum, it's method, field or statement
+                state = 3
+                continue
+            if state == 2 or state == 3:
+                # Search for opening brace '{' - end of class/interface/enum/method declaration
+                brace_search = re.search(r'{', line)
+                if brace_search is not None:
+                    out_line += line[:brace_search.start() + 1].strip() + ' '
+                    line = line[brace_search.end():]
+                    if state == 2 and 'class ' in out_line:
+                        self.indent_formatter.found_class()
+                    elif state == 2 and 'interface ' in out_line:
+                        self.indent_formatter.found_interface()
+                    elif state == 2 and 'enum ' in out_line:
+                        self.indent_formatter.found_enum()
+                    elif '(' in out_line and ')' in out_line:
+                        self.indent_formatter.found_method()
+                    else:
+                        continue
+                    break
+                semicolon_search = re.search(r';', line)
+                if semicolon_search is not None:
+                    out_line += line[:semicolon_search.start() + 1].strip() + ' '
+                    line = line[semicolon_search.end():]
+                    # Only method (in interface), field and statement declaration are possible
+                    # No indent needed, so no intent_formatter call
+                    break
+                # Nothing found on this line, need to move to next line
+                out_line += line.strip() + ' '
+                line = self.gen_input.next()
+        # Write found line
+        self.current_line = out_line
+        self.remainder = line
+        return True
 
     def process_closing_brace(self, line_num, line):
         line = line.strip()
         brace_search = re.match(regex.CLOSING_BRACE, line)
         # Found closing brace
         if brace_search is not None:
-            self.current_line = brace_search.group()
+            self.current_line += brace_search.group()
             self.remainder = line[brace_search.start() + 1:]
             self.indent_formatter.found_closing_brace()
             return True
