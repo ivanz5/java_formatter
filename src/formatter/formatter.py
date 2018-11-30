@@ -1,6 +1,7 @@
 import re
 import regex_consts as regex
 import indents_formatter
+import spaces_formatter
 
 
 class Formatter:
@@ -16,6 +17,7 @@ class Formatter:
     def __init__(self, config, input_filename, output_filename):
         self.config = config
         self.indent_formatter = indents_formatter.IndentsFormatter(config)
+        self.spaces_formatter = spaces_formatter.SpacesFormatter(config)
         print config.indent_size, config.indent_top_level_class
         f = open(input_filename, "r")
         self.content = f.readlines()
@@ -43,6 +45,7 @@ class Formatter:
             yield line
 
     def write_line(self):
+        self.current_line = self.spaces_formatter.format_line(self.current_line)
         self.current_line = self.indent_formatter.format_line(self.current_line)
         self.out.write(self.current_line + '\n')
         self.out.flush()  # for debug

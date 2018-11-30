@@ -19,3 +19,14 @@ DEFAULT = r'(^|\s+|;|{|})default\s*(:|\n)'
 
 MODIFIER = r'(^|\s+)(public|private|protected|transient|volatile|final|static|synchronized)(\n|\s+)'
 CLASS_INTERFACE_ENUM = r'(^|\s+)(class|interface|enum)(\n|\s+)'
+
+
+REPLACE_MULTIPLE_SPACES = r'(\s+(?=\(|\)|=|&|\^|!|\+|-|\*|\/|%|>|<|\||~|\?|:|\.|;|{|})' \
+                          r'|((?<=\(|\)|=|&|\^|!|\+|-|\*|\/|%|>|<|\||~|\?|:|\.|;|{|})\s+))'
+# OPERATOR_PATTERN_OLD = r'((?<=[^=+\-\*\/%<>&\^\|!])|(?<=^))OPERATOR(?=([^=+\-<>&\|]|$))'
+OPERATOR_PATTERN = r'((?<=[^=+\-\*\/%<>&\^\|!\(\)\[ ])|(?<=^))OPERATOR(?=[^=<>&\|])'
+OPERATOR_BINARY_MINUS = r'((?<=[^=+\-\*\/%<>&\^\|!\(\)\[ ])|(?<=^))-(?=[^=\-<>&\|])'
+OPERATOR_BINARY_PLUS = r'((?<=[^=+\-\*\/%<>&\^\|!\(\)\[ ])|(?<=^))\+(?=[^=\+<>&\|])'
+OPERATOR_NOT = r'((?<=[^+\-\*\/%<>\^!])|(?<=^))!(?=([^=+\-<>&\|]|$))'
+OPERATOR_UNARY_MINUS = r'((?<=[=\+\*\/%<>\^!&\|\(\)\[ ])|(?<=^))-(?=([^=+\-<>&\|]|$))'
+OPERATOR_UNARY_PLUS = r'((?<=[=\-\*\/%<>\^!&\|\(\)\[ ])|(?<=^))\+(?=([^=+\-<>&\|]|$))'
