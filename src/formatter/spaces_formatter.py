@@ -34,12 +34,16 @@ class SpacesFormatter:
 
     def lookout_config(self):
         for param in self.config.params:
+            # Spaces before left brace
+            if param.startswith('spaces-before-left-brace-') and int(self.config.params[param]):
+                keyword = param.replace('spaces-before-left-brace-', '')
+                self.spaces_before_left_brace(keyword)
             # Spaces before parentheses
-            if param.startswith('spaces-before-') and int(self.config.params[param]):
+            elif param.startswith('spaces-before-') and int(self.config.params[param]):
                 keyword = param.replace('spaces-before-', '')
                 self.space_before_parentheses_keyword(keyword)
             # Spaces around operators
-            if param.startswith('spaces-around-operators-') and int(self.config.params[param]):
+            elif param.startswith('spaces-around-operators-') and int(self.config.params[param]):
                 keyword = param.replace('spaces-around-operators-', '')
                 self.spaces_around_operators_by_type(keyword)
 
@@ -97,3 +101,19 @@ class SpacesFormatter:
 
     def spaces_around_operators_by_regex(self, pattern, replacement):
         self.line = re.sub(pattern, replacement, self.line)
+
+    def spaces_before_left_brace(self, keyword):
+        if keyword == 'class':
+            self.space_before_left_brace_class()
+        elif keyword == 'method':
+            self.space_before_left_brace_method()
+        elif keyword in ['if', 'else', 'for', 'while', 'do', 'switch', 'try', 'catch', 'finally', 'synchronized']:
+            pass
+
+    def space_before_left_brace_class(self):
+        if self._class_found:
+            self.line = re.sub(r'(?<=[^\s]){', ' {', self.line)
+
+    def space_before_left_brace_method(self):
+        if self._method_declaration_found:
+            self.line = re.sub(r'(?<=[^\s]){', ' {', self.line)

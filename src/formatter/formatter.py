@@ -163,14 +163,14 @@ class Formatter:
                     line = line[break_search.end() + 1:]
                     # Entire expression found
                     if prefix[len(prefix) - 1] == ';':
-                        self.current_line = prefix
+                        self.current_line += prefix
                         self.remainder = line
                     # Semicolon is missing
                     else:
                         self.handle_curly_brace_line(prefix, line)
                 # 'case ...: ...\n'
                 else:
-                    self.current_line = prefix
+                    self.current_line += prefix
                     self.remainder = line
                     self.indent_formatter.found_case()
             # 'case'. Colon is missing. Try to find it on next lines.
@@ -195,7 +195,7 @@ class Formatter:
             # 'break;'
             if ';' in prefix:
                 self.indent_formatter.found_break()
-                self.current_line = prefix
+                self.current_line += prefix
                 self.remainder = line
             # Semicolon is missing. Find it.
             else:
@@ -246,7 +246,6 @@ class Formatter:
                     elif '(' in out_line and ')' in out_line:
                         self.indent_formatter.found_method()
                         self.spaces_formatter.found_method_declaration()
-                        print out_line
                     else:
                         continue
                     break
@@ -265,7 +264,7 @@ class Formatter:
                 out_line += line.strip() + ' '
                 line = self.gen_input.next()
         # Write found line
-        self.current_line = out_line
+        self.current_line += out_line
         self.remainder = line
         return True
 
