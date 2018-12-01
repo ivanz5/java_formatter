@@ -38,6 +38,10 @@ class SpacesFormatter:
             if param.startswith('spaces-before-left-brace-') and int(self.config.params[param]):
                 keyword = param.replace('spaces-before-left-brace-', '')
                 self.spaces_before_left_brace(keyword)
+            # Spaces before keywords (else, while, catch, finally)
+            elif param.startswith('spaces-before-keywords-') and int(self.config.params[param]):
+                keyword = param.replace('spaces-before-keywords-', '')
+                self.spaces_before_keywords(keyword)
             # Spaces before parentheses
             elif param.startswith('spaces-before-') and int(self.config.params[param]):
                 keyword = param.replace('spaces-before-', '')
@@ -104,9 +108,11 @@ class SpacesFormatter:
 
     def spaces_before_left_brace(self, keyword):
         if keyword == 'class':
-            self.space_before_left_brace_class()
+            if self._class_found:
+                self.line = re.sub(r'(?<=[^\s]){', ' {', self.line)
         elif keyword == 'method':
-            self.space_before_left_brace_method()
+            if self._method_declaration_found:
+                self.line = re.sub(r'(?<=[^\s]){', ' {', self.line)
         if keyword in ['else', 'do', 'try', 'finally', 'synchronized']:
             search_regex = keyword + r'\{'
             replace_str = keyword + r' {'
@@ -118,11 +124,8 @@ class SpacesFormatter:
                 replace_str = search.group()[:len(search.group()) - 1] + ' {'
                 self.line = self.line.replace(search.group(), replace_str)
 
-    def space_before_left_brace_class(self):
-        if self._class_found:
-            self.line = re.sub(r'(?<=[^\s]){', ' {', self.line)
-
-    def space_before_left_brace_method(self):
-        if self._method_declaration_found:
-            self.line = re.sub(r'(?<=[^\s]){', ' {', self.line)
-
+    def spaces_before_keywords(self, keyword):
+        if keyword in ['else', 'while', 'catch', 'finally']:
+            search_regex = r'}' + keyword
+            replace_str = r'} ' + keyword
+            self.line = re.sub(search_regex, replace_str, self.line)
