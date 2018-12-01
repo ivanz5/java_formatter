@@ -4,9 +4,27 @@ import regex_consts as regex
 
 class SpacesFormatter:
 
+    _class_found = False
+    _method_declaration_found = False
+    _method_call_found = False
+
     def __init__(self, config):
         self.config = config
         self.line = str()
+
+    def found_class(self):
+        self._class_found = True
+
+    def found_method_declaration(self):
+        self._method_declaration_found = True
+
+    def found_method_call(self):
+        self._method_call_found = True
+
+    def iterate(self):
+        self._class_found = False
+        self._method_declaration_found = False
+        self._method_call_found = False
 
     def format_line(self, line):
         line = re.sub(regex.REPLACE_MULTIPLE_SPACES, '', line)
@@ -26,17 +44,22 @@ class SpacesFormatter:
                 self.spaces_around_operators_by_type(keyword)
 
     def space_before_parentheses_method_declaration(self):
-        pass
+        if self._method_declaration_found:
+            self.line = re.sub(r'(?<=[^\s])\(', ' (', self.line)
 
     def space_before_parentheses_method_call(self):
-        pass
+        if self._method_call_found:
+            self.line = re.sub(r'(?<=[^\s])\(', ' (', self.line)
 
     def space_before_parentheses_keyword(self, keyword):
-        if keyword not in ['if', 'for', 'while', 'switch', 'try', 'catch', 'synchronized']:
-            return
-        search_regex = keyword + r'\('
-        replace_str = keyword + r' ('
-        self.line = re.sub(search_regex, replace_str, self.line)
+        if keyword == 'method-declaration':
+            self.space_before_parentheses_method_declaration()
+        elif keyword == 'method-call':
+            self.space_before_parentheses_method_call()
+        elif keyword in ['if', 'for', 'while', 'switch', 'try', 'catch', 'synchronized']:
+            search_regex = keyword + r'\('
+            replace_str = keyword + r' ('
+            self.line = re.sub(search_regex, replace_str, self.line)
 
     def spaces_around_operators_by_type(self, operators_type):
         if operators_type == 'assignment':

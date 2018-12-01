@@ -82,6 +82,7 @@ class Formatter:
             self.current_line = line.strip()
         self.write_line()
         self.indent_formatter.iterate()
+        self.spaces_formatter.iterate()
 
     def process_keyword_parentheses(self, line_num, line):
         """
@@ -237,12 +238,15 @@ class Formatter:
                     line = line[brace_search.end():]
                     if state == 2 and 'class ' in out_line:
                         self.indent_formatter.found_class()
+                        self.spaces_formatter.found_class()
                     elif state == 2 and 'interface ' in out_line:
                         self.indent_formatter.found_interface()
                     elif state == 2 and 'enum ' in out_line:
                         self.indent_formatter.found_enum()
                     elif '(' in out_line and ')' in out_line:
                         self.indent_formatter.found_method()
+                        self.spaces_formatter.found_method_declaration()
+                        print out_line
                     else:
                         continue
                     break
@@ -250,7 +254,11 @@ class Formatter:
                 if semicolon_search is not None:
                     out_line += line[:semicolon_search.start() + 1].strip() + ' '
                     line = line[semicolon_search.end():]
+                    # Method call
+                    if '(' in out_line and ')' in out_line:
+                        self.spaces_formatter.found_method_call()
                     # Only method (in interface), field and statement declaration are possible
+                    # Method call also possible
                     # No indent needed, so no intent_formatter call
                     break
                 # Nothing found on this line, need to move to next line
