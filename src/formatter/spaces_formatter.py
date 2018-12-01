@@ -107,8 +107,16 @@ class SpacesFormatter:
             self.space_before_left_brace_class()
         elif keyword == 'method':
             self.space_before_left_brace_method()
-        elif keyword in ['if', 'else', 'for', 'while', 'do', 'switch', 'try', 'catch', 'finally', 'synchronized']:
-            pass
+        if keyword in ['else', 'do', 'try', 'finally', 'synchronized']:
+            search_regex = keyword + r'\{'
+            replace_str = keyword + r' {'
+            self.line = re.sub(search_regex, replace_str, self.line)
+        if keyword in ['if', 'for', 'while', 'switch', 'try', 'catch', 'synchronized']:
+            search_regex = regex.KEYWORD_WITH_PARENTHESES_BRACE.replace('KEYWORD', keyword)
+            search = re.search(search_regex, self.line)
+            if search is not None:
+                replace_str = search.group()[:len(search.group()) - 1] + ' {'
+                self.line = self.line.replace(search.group(), replace_str)
 
     def space_before_left_brace_class(self):
         if self._class_found:
@@ -117,3 +125,4 @@ class SpacesFormatter:
     def space_before_left_brace_method(self):
         if self._method_declaration_found:
             self.line = re.sub(r'(?<=[^\s]){', ' {', self.line)
+
