@@ -50,13 +50,17 @@ spaces-before-keywords-catch: 1
 spaces-before-keywords-finally: 1
 
 
-spaces-before-left-brace: 1
+# spaces-before-left-brace: 1
 spaces-before-keyword-else: 1
 spaces-before-keyword-while: 1
 spaces-before-keyword-catch: 1
 spaces-before-keyword-finally: 1
-spaces-within-parentheses: 0
+# spaces-within-parentheses: 0
 #maybe remove???
-spaces-ternary-operator: 1
-spaces-after-comma: 1
-spaces-after-for-semicolon: 1
+# spaces-ternary-operator: 1
+# spaces-after-comma: 1
+# spaces-after-for-semicolon: 1
+
+braces-placement-class: new-line-shifted
+braces-placement-method: end-of-line
+braces-placement-other: end-of-line

@@ -34,7 +34,7 @@ class Formatter:
             line_num += 1
         # Write what is left
         if self.current_line != '':
-            self.write_line()
+            self.write_line(line_num)
 
     def next_input(self):
         for line in self.content:
@@ -44,10 +44,13 @@ class Formatter:
                 yield s
             yield line
 
-    def write_line(self):
+    def write_line(self, line_num):
+        # Format spaces
         self.current_line = self.spaces_formatter.format_line(self.current_line)
-        self.current_line = self.indent_formatter.format_line(self.current_line)
+        # Format indents
+        self.current_line = self.indent_formatter.format_line(self.current_line, line_num)
         self.out.write(self.current_line + '\n')
+        # Clear current line and remainder
         self.out.flush()  # for debug
         self.current_line = ""
         self.remainder = self.remainder.strip()
@@ -58,29 +61,29 @@ class Formatter:
             # self.process_line_write(line)
             return
         if self.process_keyword_braces(line_num, line):
-            self.process_line_write(line)
+            self.process_line_write(line, line_num)
             return
         if self.process_keyword_parentheses(line_num, line):
-            self.process_line_write(line)
+            self.process_line_write(line, line_num)
             return
         if self.process_for(line_num, line):
-            self.process_line_write(line)
+            self.process_line_write(line, line_num)
             return
         if self.process_case(line_num, line, False):  # 'case'
-            self.process_line_write(line)
+            self.process_line_write(line, line_num)
             return
         if self.process_case(line_num, line, True):  # 'default'
-            self.process_line_write(line)
+            self.process_line_write(line, line_num)
             return
         if self.process_field_class_method(line_num, line):
-            self.process_line_write(line)
+            self.process_line_write(line, line_num)
             return
-        self.process_line_write(line)
+        self.process_line_write(line, line_num)
 
-    def process_line_write(self, line):
+    def process_line_write(self, line, line_num):
         if self.current_line == '':
             self.current_line = line.strip()
-        self.write_line()
+        self.write_line(line_num)
         self.indent_formatter.iterate()
         self.spaces_formatter.iterate()
 
@@ -137,7 +140,7 @@ class Formatter:
         :return: None
         """
         for pattern in patterns:
-            search = re.search(pattern, line)
+            search = re.match(pattern, line)
             # When found a match, remember it and pass next to parse up to '{' or ';'
             if search is not None:
                 prefix = search.group().strip()
@@ -237,14 +240,14 @@ class Formatter:
                     out_line += line[:brace_search.start() + 1].strip() + ' '
                     line = line[brace_search.end():]
                     if state == 2 and 'class ' in out_line:
-                        self.indent_formatter.found_class()
+                        self.indent_formatter.found_class(line_num)
                         self.spaces_formatter.found_class()
                     elif state == 2 and 'interface ' in out_line:
-                        self.indent_formatter.found_interface()
+                        self.indent_formatter.found_interface(line_num)
                     elif state == 2 and 'enum ' in out_line:
-                        self.indent_formatter.found_enum()
+                        self.indent_formatter.found_enum(line_num)
                     elif '(' in out_line and ')' in out_line:
-                        self.indent_formatter.found_method()
+                        self.indent_formatter.found_method(line_num)
                         self.spaces_formatter.found_method_declaration()
                     else:
                         continue

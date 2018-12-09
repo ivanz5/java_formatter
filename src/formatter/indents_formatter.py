@@ -1,3 +1,5 @@
+import re
+
 class IndentsFormatter:
 
     _current_level = 0
@@ -10,10 +12,11 @@ class IndentsFormatter:
     _switch_indent = 0
     _switch_braces = 0
 
-    _class_found = False
-    _interface_found = False
-    _enum_found = False
-    _method_found = False
+    _class_found = 0
+    _interface_found = 0
+    _enum_found = 0
+    _method_found = 0
+    _brace_found = False
 
     def __init__(self, config):
         self.config = config
@@ -24,8 +27,10 @@ class IndentsFormatter:
 
     def iterate(self):
         self._current_level = self._next_level
+        self._brace_found = False
 
     def found_brace(self):
+        self._brace_found = True
         self._next_level = self._current_level + 1
         if self._switch_opened > 0:
             self._switch_braces += 1
@@ -67,23 +72,50 @@ class IndentsFormatter:
             self._case_opened = False
             self._decrease_next_level()
 
-    def found_class(self):
-        self._class_found = True
+    def found_class(self, line_num):
+        self._class_found = line_num
         self._next_level = self._current_level + 1
 
-    def found_interface(self):
-        self._interface_found = True
+    def found_interface(self, line_num):
+        self._interface_found = line_num
         self._next_level = self._current_level + 1
 
-    def found_enum(self):
-        self._enum_found = True
+    def found_enum(self, line_num):
+        self._enum_found = line_num
         self._next_level = self._current_level + 1
 
-    def found_method(self):
-        self._method_found = True
+    def found_method(self, line_num):
+        self._method_found = line_num
         self._next_level = self._current_level + 1
 
-    def format_line(self, line):
+    def _format_line_shift(self, line, indent, parameter):
+        if self.config.params.get(parameter) == 'new-line':
+            line = indent + line.strip()
+            line = re.sub('\s*{', '\n' + indent + '{', line)
+            return line
+        elif self.config.params.get(parameter) == 'new-line-shifted':
+            line = indent + line.strip()
+            shifted_indent = ' ' * (self._current_level + 1) * self.config.indent_size
+            line = re.sub('\s*{', '\n' + shifted_indent + '{', line)
+            return line
+        return None
+
+    def format_line(self, line, line_num):
         indent = ' ' * self._current_level * self.config.indent_size
+
+        # Braces in class declaration
+        if self._class_found == line_num:
+            formatted_line = self._format_line_shift(line, indent, 'braces-placement-class')
+            if formatted_line is not None:
+                return formatted_line
+        elif self._method_found == line_num:
+            formatted_line = self._format_line_shift(line, indent, 'braces-placement-method')
+            if formatted_line is not None:
+                return formatted_line
+        elif self._brace_found:
+            formatted_line = self._format_line_shift(line, indent, 'braces-placement-other')
+            if formatted_line is not None:
+                return formatted_line
+
         line = indent + line.strip()
         return line

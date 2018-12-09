@@ -21,4 +21,4 @@ class Config:
             elif not line.startswith("#") and ":" in line:
                 search = re.match(r'.*(?=:\s*)', line)
                 if search is not None:
-                    self.params[search.group()] = line[search.end():].replace(':', '').replace(' ', '')
+                    self.params[search.group()] = line[search.end():].replace(':', '').replace(' ', '').replace('\n', '')
