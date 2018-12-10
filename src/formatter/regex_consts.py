@@ -31,3 +31,7 @@ OPERATOR_NOT = r'((?<=[^+\-\*\/%<>\^!])|(?<=^))!(?=([^=+\-<>&\|]|$))'
 OPERATOR_UNARY_MINUS = r'((?<=[=\+\*\/%<>\^!&\|\(\)\[ ])|(?<=^))-(?=([^=+\-<>&\|]|$))'
 OPERATOR_UNARY_PLUS = r'((?<=[=\-\*\/%<>\^!&\|\(\)\[ ])|(?<=^))\+(?=([^=+\-<>&\|]|$))'
 KEYWORD_WITH_PARENTHESES_BRACE = r'KEYWORD\s*\(.*\){'
+
+# WRAP_KEYWORD_INCLUDING_PRECEDING = r'(\)|\s)KEYWORD\s+'
+WRAP_KEYWORD = r'(?<=(\)|\s))KEYWORD\s+'
+WRAP_KEYWORD_KEYWORD_WITH_COMMA = r'\s*[a-z|A-Z|0-9|_]+\s?,'

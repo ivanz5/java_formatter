@@ -1,4 +1,5 @@
 import re
+from . import regex_consts as regex
 
 
 class IndentsFormatter:
@@ -101,6 +102,41 @@ class IndentsFormatter:
             return line
         return None
 
+    def format_wrap_list(self, line, keyword):
+        search = re.search(regex.WRAP_KEYWORD.replace('KEYWORD', keyword), line)
+        if search is not None:
+            # Indent with current level + 2
+            shifted_indent = ' ' * (self._current_level + 2) * self.config.indent_size
+
+            pre_line = line[:search.end()].rstrip()  # All before given keyword (including keyword itself)
+            sub_line = line[search.end():].strip()  # All after given keyword
+            new_sub_line = ''
+            # Search for tokens after keyword to put them each on own line
+            # e.g. '... implements A, B, C'. Tokens: A, B, C.
+            while True:
+                search = re.match(regex.WRAP_KEYWORD_KEYWORD_WITH_COMMA, sub_line)
+                # Found token, add line break
+                if search is not None:
+                    current_token = search.group().strip()
+                    new_sub_line += shifted_indent + current_token + '\n'
+                    sub_line = sub_line[search.end():]
+                # No tokens with trailing comma like 'A,' left, finish lines breaking
+                else:
+                    new_sub_line += shifted_indent + sub_line.strip()
+                    break
+            line = pre_line + '\n' + new_sub_line
+        return line
+
+    def format_wrap_keyword(self, line, keyword):
+        # Indent with current level + 2
+        shifted_indent = ' ' * (self._current_level + 2) * self.config.indent_size
+        replacement = '\n' + shifted_indent + keyword + ' '
+        # Add line break before keyword
+        line = re.sub(regex.WRAP_KEYWORD.replace('KEYWORD', keyword), replacement, line)
+        # Remove trailing spaces on each line if present
+        line = re.sub(' +\n', '\n', line)
+        return line
+
     def format_line(self, line, line_num):
         indent = ' ' * self._current_level * self.config.indent_size
 
@@ -136,5 +172,25 @@ class IndentsFormatter:
         # '} finally'
         if int(self.config.params['keyword-on-new-line-finally']):
             line = re.sub(r'}\s*finally', '}\n' + indent + 'finally', line)
+
+        # 'extends/implements/throws A, B, C,...' cases
+        # Wrap extends/implements/throws to new line
+        if int(self.config.params['wrap-keyword-extends']):
+            line = self.format_wrap_keyword(line, 'extends')
+        if int(self.config.params['wrap-keyword-implements']):
+            line = self.format_wrap_keyword(line, 'implements')
+        if int(self.config.params['wrap-keyword-throws']):
+            line = self.format_wrap_keyword(line, 'throws')
+
+        # 'extends/implements/throws A, B, C,...' cases
+        # Wrap A, B, C... in lines
+        if int(self.config.params['wrap-list-extends']):
+            line = self.format_wrap_list(line, 'extends')
+        if int(self.config.params['wrap-list-implements']):
+            line = self.format_wrap_list(line, 'implements')
+        if int(self.config.params['wrap-list-throws']):
+            line = self.format_wrap_list(line, 'throws')
+
+
 
         return line
