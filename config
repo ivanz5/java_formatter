@@ -63,4 +63,9 @@ spaces-before-keyword-finally: 1
 
 braces-placement-class: new-line
 braces-placement-method: end-of-line
-braces-placement-other: new-line
+braces-placement-other: end-of-line
+
+keyword-on-new-line-else: 0
+keyword-on-new-line-while: 1
+keyword-on-new-line-catch: 0
+keyword-on-new-line-finally: 1

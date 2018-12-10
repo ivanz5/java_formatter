@@ -1,5 +1,6 @@
 import re
 
+
 class IndentsFormatter:
 
     _current_level = 0
@@ -103,19 +104,37 @@ class IndentsFormatter:
     def format_line(self, line, line_num):
         indent = ' ' * self._current_level * self.config.indent_size
 
+        # Add correct indent to line
+        line = indent + line.strip()
+
         # Braces in class declaration
         if self._class_found == line_num:
             formatted_line = self._format_line_shift(line, indent, 'braces-placement-class')
             if formatted_line is not None:
-                return formatted_line
+                line = formatted_line
+        # Braces in method declaration
         elif self._method_found == line_num:
             formatted_line = self._format_line_shift(line, indent, 'braces-placement-method')
             if formatted_line is not None:
-                return formatted_line
+                line = formatted_line
+        # Other cased with '{'
         elif self._brace_found:
             formatted_line = self._format_line_shift(line, indent, 'braces-placement-other')
             if formatted_line is not None:
-                return formatted_line
+                line = formatted_line
 
-        line = indent + line.strip()
+        # '} KEYWORD' cases
+        # '} else'
+        if int(self.config.params['keyword-on-new-line-else']):
+            line = re.sub(r'}\s*else', '}\n' + indent + 'else', line)
+        # '} while'
+        if int(self.config.params['keyword-on-new-line-while']):
+            line = re.sub(r'}\s*while', '}\n' + indent + 'while', line)
+        # '} catch'
+        if int(self.config.params['keyword-on-new-line-catch']):
+            line = re.sub(r'}\s*catch', '}\n' + indent + 'catch', line)
+        # '} finally'
+        if int(self.config.params['keyword-on-new-line-finally']):
+            line = re.sub(r'}\s*finally', '}\n' + indent + 'finally', line)
+
         return line
