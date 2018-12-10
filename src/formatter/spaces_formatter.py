@@ -1,5 +1,5 @@
 import re
-import regex_consts as regex
+from . import regex_consts as regex
 
 
 class SpacesFormatter:

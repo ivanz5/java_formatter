@@ -1,7 +1,7 @@
 import re
-import regex_consts as regex
-import indents_formatter
-import spaces_formatter
+from . import regex_consts as regex
+from . import indents_formatter
+from . import spaces_formatter
 
 
 class Formatter:
@@ -18,7 +18,7 @@ class Formatter:
         self.config = config
         self.indent_formatter = indents_formatter.IndentsFormatter(config)
         self.spaces_formatter = spaces_formatter.SpacesFormatter(config)
-        print config.indent_size, config.indent_top_level_class
+        print (config.indent_size, config.indent_top_level_class)
         f = open(input_filename, "r")
         self.content = f.readlines()
         f.close()
@@ -178,12 +178,12 @@ class Formatter:
                     self.indent_formatter.found_case()
             # 'case'. Colon is missing. Try to find it on next lines.
             else:
-                line = self.gen_input.next()
+                line = self.gen_input.__next__()
                 search = re.search(':', line)
                 # Add anything before ':' to current line with 'case'
                 while search is None:
                     prefix += ' ' + line.strip()
-                    line = self.gen_input.next()
+                    line = self.gen_input.__next__()
                     search = re.search(':', line)
                 prefix += ' ' + line[:search.start() + 1].strip()
                 self.current_line += prefix
@@ -265,7 +265,7 @@ class Formatter:
                     break
                 # Nothing found on this line, need to move to next line
                 out_line += line.strip() + ' '
-                line = self.gen_input.next()
+                line = self.gen_input.__next__()
         # Write found line
         self.current_line += out_line
         self.remainder = line
@@ -307,7 +307,7 @@ class Formatter:
         else:
             line = line.strip()
             self.current_line += ' ' + line
-            line = self.gen_input.next()
+            line = self.gen_input.__next__()
             self.handle_curly_brace_line("", line)
 
     def handle_for(self, line, saved_line, semicolons_count):
@@ -334,5 +334,5 @@ class Formatter:
             return
         # Neither ';' not ':' found. Search in next line.
         saved_line += line.strip() + ' '
-        line = self.gen_input.next()
+        line = self.gen_input.__next__()
         self.handle_for(line, saved_line, semicolons_count)

@@ -61,6 +61,6 @@ spaces-before-keyword-finally: 1
 # spaces-after-comma: 1
 # spaces-after-for-semicolon: 1
 
-braces-placement-class: new-line-shifted
+braces-placement-class: new-line
 braces-placement-method: end-of-line
-braces-placement-other: end-of-line
+braces-placement-other: new-line
