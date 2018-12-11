@@ -70,9 +70,22 @@ keyword-on-new-line-while: 1
 keyword-on-new-line-catch: 0
 keyword-on-new-line-finally: 1
 
-wrap-keyword-extends: 1
+wrap-keyword-extends: 0
 wrap-keyword-implements: 0
-wrap-keyword-throws: 1
-wrap-list-extends: 1
-wrap-list-implements: 1
-wrap-list-throws: 1
+wrap-keyword-throws: 0
+wrap-list-extends: 0
+wrap-list-implements: 0
+wrap-list-throws: 0
+
+blank-lines-min-before-package: 0
+blank-lines-min-after-package: 1
+blank-lines-min-before-imports: 1
+blank-lines-min-after-imports: 1
+blank-lines-min-before-class-definition: 0
+blank-lines-min-after-class-end: 1
+# blank-lines-min-after-class-header: 0
+# blank-lines-min-before-class-end: 0
+blank-lines-min-before-method-definition: 1
+blank-lines-min-after-method-end: 1
+# blank-lines-min-before-method-body: 0
+

@@ -2,6 +2,7 @@ import re
 from . import regex_consts as regex
 from . import indents_formatter
 from . import spaces_formatter
+from . import blank_lines_formatter
 
 
 class Formatter:
@@ -18,6 +19,7 @@ class Formatter:
         self.config = config
         self.indent_formatter = indents_formatter.IndentsFormatter(config)
         self.spaces_formatter = spaces_formatter.SpacesFormatter(config)
+        self.blank_lines_formatter = blank_lines_formatter.BlankLinesFormatter(config)
         print (config.indent_size, config.indent_top_level_class)
         f = open(input_filename, "r")
         self.content = f.readlines()
@@ -49,9 +51,13 @@ class Formatter:
         self.current_line = self.spaces_formatter.format_line(self.current_line)
         # Format indents
         self.current_line = self.indent_formatter.format_line(self.current_line, line_num)
-        self.out.write(self.current_line + '\n')
+        # Format (handle) blank lines. This will return None is current_line is blank.
+        self.current_line = self.blank_lines_formatter.format_line(self.current_line)
+        if self.current_line is not None:
+            self.out.write(self.current_line + '\n')
+            self.out.flush()  # for debug
+
         # Clear current line and remainder
-        self.out.flush()  # for debug
         self.current_line = ""
         self.remainder = self.remainder.strip()
 
@@ -240,15 +246,24 @@ class Formatter:
                     out_line += line[:brace_search.start() + 1].strip() + ' '
                     line = line[brace_search.end():]
                     if state == 2 and 'class ' in out_line:
+                        # Write } if there is already one in buffer because class can only be defined in new line
+                        if self.current_line == '}':
+                            self.write_line(line_num)
                         self.indent_formatter.found_class(line_num)
                         self.spaces_formatter.found_class()
+                        self.blank_lines_formatter.found_class()
                     elif state == 2 and 'interface ' in out_line:
                         self.indent_formatter.found_interface(line_num)
                     elif state == 2 and 'enum ' in out_line:
                         self.indent_formatter.found_enum(line_num)
                     elif '(' in out_line and ')' in out_line:
+                        # Write closing braces at the beginning of the line
+                        # because they are not needed to follow method declaration
+                        if '}' in self.current_line:
+                            self.write_line(line_num)
                         self.indent_formatter.found_method(line_num)
                         self.spaces_formatter.found_method_declaration()
+                        self.blank_lines_formatter.found_method()
                     else:
                         continue
                     break
@@ -276,9 +291,13 @@ class Formatter:
         brace_search = re.match(regex.CLOSING_BRACE, line)
         # Found closing brace
         if brace_search is not None:
+            # Write } if there is already one in buffer
+            if self.current_line == '}':
+                self.write_line(line_num)
             self.current_line += brace_search.group()
             self.remainder = line[brace_search.start() + 1:]
             self.indent_formatter.found_closing_brace()
+            self.blank_lines_formatter.found_closing_brace()
             return True
 
     def handle_curly_brace_line(self, prefix, line):
@@ -294,6 +313,7 @@ class Formatter:
             self.current_line += s
             self.remainder = line
             self.indent_formatter.found_brace()
+            self.blank_lines_formatter.found_brace()
             return
         # Search for semicolon (simple if, while, etc. statement)
         semicolon_search = re.search(r';', line)
