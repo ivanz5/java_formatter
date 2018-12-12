@@ -35,6 +35,7 @@ KEYWORD_WITH_PARENTHESES_BRACE = r'KEYWORD\s*\(.*\){'
 # WRAP_KEYWORD_INCLUDING_PRECEDING = r'(\)|\s)KEYWORD\s+'
 WRAP_KEYWORD = r'(?<=(\)|\s))KEYWORD\s+'
 WRAP_KEYWORD_KEYWORD_WITH_COMMA = r'\s*[a-z|A-Z|0-9|_]+\s?,'
+WRAP_BRACE_NON_KEYWORD = r'}\s*(?!\s*($|;|else|while|catch|finally)(\s|{|\(|$))'
 
 BLANK_LINES_PACKAGE = r'\s*package\s'
 BLANK_LINES_IMPORT = r'\s*import\s'

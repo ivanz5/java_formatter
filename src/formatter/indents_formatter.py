@@ -159,6 +159,11 @@ class IndentsFormatter:
             if formatted_line is not None:
                 line = formatted_line
 
+        # '} ...(anything other than else, while, catch, finally) case
+        # e.g.: '} int a = 5;' OR } in '} foo();'
+        # Need to move statement to next line
+        line = re.sub(regex.WRAP_BRACE_NON_KEYWORD, '}\n' + indent, line)
+
         # '} KEYWORD' cases
         # '} else'
         if int(self.config.params['keyword-on-new-line-else']):

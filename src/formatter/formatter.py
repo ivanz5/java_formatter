@@ -87,8 +87,13 @@ class Formatter:
         self.process_line_write(line, line_num)
 
     def process_line_write(self, line, line_num):
+        # Nothing left in buffer, fill it with obtained line
         if self.current_line == '':
             self.current_line = line.strip()
+        # Closing braces left in buffer and obtained line is blank, write buffer
+        elif self.current_line.endswith('}') and line.strip() == '':
+            self.write_line(line_num)
+            self.current_line = line
         self.write_line(line_num)
         self.indent_formatter.iterate()
         self.spaces_formatter.iterate()
