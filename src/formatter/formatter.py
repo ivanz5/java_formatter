@@ -14,6 +14,8 @@ class Formatter:
     gen_input = iter("")
     # Line buffer for output
     current_line = str()
+    # Current line number in original input file
+    line_num = 0
 
     def __init__(self, config, input_filename, output_filename):
         self.config = config
@@ -27,16 +29,14 @@ class Formatter:
         self.out = open(output_filename, "w")
 
     def format_file(self):
-        line_num = 1
         # Iterator for input sequence
         self.gen_input = iter(self.next_input())
         # Iterate input
         for line in self.gen_input:
-            self.process_line(line_num, line)
-            line_num += 1
+            self.process_line(line)
         # Write what is left
         if self.current_line != '':
-            self.write_line(line_num)
+            self.write_line()
 
     def next_input(self):
         for line in self.content:
@@ -44,13 +44,14 @@ class Formatter:
                 s = self.remainder
                 self.remainder = ''
                 yield s
+            self.line_num += 1
             yield line
 
-    def write_line(self, line_num):
+    def write_line(self):
         # Format spaces
         self.current_line = self.spaces_formatter.format_line(self.current_line)
         # Format indents
-        self.current_line = self.indent_formatter.format_line(self.current_line, line_num)
+        self.current_line = self.indent_formatter.format_line(self.current_line, self.line_num)
         # Format (handle) blank lines. This will return None is current_line is blank.
         self.current_line = self.blank_lines_formatter.format_line(self.current_line)
         if self.current_line is not None:
@@ -61,44 +62,44 @@ class Formatter:
         self.current_line = ""
         self.remainder = self.remainder.strip()
 
-    def process_line(self, line_num, line):
-        if self.process_closing_brace(line_num, line):
+    def process_line(self, line):
+        if self.process_closing_brace(line):
             # Do not write line because handling of '} keyword' will not be done
             # self.process_line_write(line)
             return
-        if self.process_keyword_braces(line_num, line):
-            self.process_line_write(line, line_num)
+        if self.process_keyword_braces(line):
+            self.process_line_write(line)
             return
-        if self.process_keyword_parentheses(line_num, line):
-            self.process_line_write(line, line_num)
+        if self.process_keyword_parentheses(line):
+            self.process_line_write(line)
             return
-        if self.process_for(line_num, line):
-            self.process_line_write(line, line_num)
+        if self.process_for(line):
+            self.process_line_write(line)
             return
-        if self.process_case(line_num, line, False):  # 'case'
-            self.process_line_write(line, line_num)
+        if self.process_case(line, False):  # 'case'
+            self.process_line_write(line)
             return
-        if self.process_case(line_num, line, True):  # 'default'
-            self.process_line_write(line, line_num)
+        if self.process_case(line, True):  # 'default'
+            self.process_line_write(line)
             return
-        if self.process_field_class_method(line_num, line):
-            self.process_line_write(line, line_num)
+        if self.process_field_class_method(line):
+            self.process_line_write(line)
             return
-        self.process_line_write(line, line_num)
+        self.process_line_write(line)
 
-    def process_line_write(self, line, line_num):
+    def process_line_write(self, line):
         # Nothing left in buffer, fill it with obtained line
         if self.current_line == '':
             self.current_line = line.strip()
         # Closing braces left in buffer and obtained line is blank, write buffer
         elif self.current_line.endswith('}') and line.strip() == '':
-            self.write_line(line_num)
+            self.write_line()
             self.current_line = line
-        self.write_line(line_num)
+        self.write_line()
         self.indent_formatter.iterate()
         self.spaces_formatter.iterate()
 
-    def process_keyword_parentheses(self, line_num, line):
+    def process_keyword_parentheses(self, line):
         """
         Process such constructions:
         if, while, switch
@@ -107,7 +108,7 @@ class Formatter:
         if self.process_general_construction(patterns, line):
             return True
 
-    def process_keyword_braces(self, line_num, line):
+    def process_keyword_braces(self, line):
         if self.process_general_construction_brace(regex.DO, line):
             return True
         if self.process_general_construction_brace(regex.TRY, line):
@@ -134,7 +135,7 @@ class Formatter:
             self.handle_curly_brace_line(prefix, line)
             return True
 
-    def process_for(self, line_num, line):
+    def process_for(self, line):
         search = re.search(regex.FOR, line)
         if search is not None:
             prefix = search.group().strip()
@@ -161,7 +162,7 @@ class Formatter:
                 self.handle_curly_brace_line(prefix, line)
                 return True
 
-    def process_case(self, line_num, line, process_default):
+    def process_case(self, line, process_default):
         # Choose 'case' or 'default' construction
         exp = regex.DEFAULT if process_default else regex.CASE
         search = re.search(exp, line)
@@ -217,7 +218,7 @@ class Formatter:
                 self.indent_formatter.found_break()
             return True
 
-    def process_field_class_method(self, line_num, line):
+    def process_field_class_method(self, line):
         # state = 1: modifiers list (public, private, protected, static, final,
         # synchronized, transient)
         # state = 2: class or interface definition (class or interface keyword found)
@@ -253,20 +254,20 @@ class Formatter:
                     if state == 2 and 'class ' in out_line:
                         # Write } if there is already one in buffer because class can only be defined in new line
                         if self.current_line == '}':
-                            self.write_line(line_num)
-                        self.indent_formatter.found_class(line_num)
+                            self.write_line()
+                        self.indent_formatter.found_class(self.line_num)
                         self.spaces_formatter.found_class()
                         self.blank_lines_formatter.found_class()
                     elif state == 2 and 'interface ' in out_line:
-                        self.indent_formatter.found_interface(line_num)
+                        self.indent_formatter.found_interface(self.line_num)
                     elif state == 2 and 'enum ' in out_line:
-                        self.indent_formatter.found_enum(line_num)
+                        self.indent_formatter.found_enum(self.line_num)
                     elif '(' in out_line and ')' in out_line:
                         # Write closing braces at the beginning of the line
                         # because they are not needed to follow method declaration
                         if '}' in self.current_line:
-                            self.write_line(line_num)
-                        self.indent_formatter.found_method(line_num)
+                            self.write_line()
+                        self.indent_formatter.found_method(self.line_num)
                         self.spaces_formatter.found_method_declaration()
                         self.blank_lines_formatter.found_method()
                     else:
@@ -291,14 +292,14 @@ class Formatter:
         self.remainder = line
         return True
 
-    def process_closing_brace(self, line_num, line):
+    def process_closing_brace(self, line):
         line = line.strip()
         brace_search = re.match(regex.CLOSING_BRACE, line)
         # Found closing brace
         if brace_search is not None:
             # Write } if there is already one in buffer
             if self.current_line == '}':
-                self.write_line(line_num)
+                self.write_line()
             self.current_line += brace_search.group()
             self.remainder = line[brace_search.start() + 1:]
             self.indent_formatter.found_closing_brace()
