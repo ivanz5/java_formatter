@@ -26,10 +26,37 @@ class SpacesFormatter:
         self._method_declaration_found = False
         self._method_call_found = False
 
-    def format_line(self, line):
-        line = re.sub(regex.REPLACE_MULTIPLE_SPACES, '', line)
-        self.line = re.sub(r'\s+', ' ', line)
-        self.lookout_config()
+    def format_line(self, line, line_num):
+        original_line = line
+
+        # Extract string literals
+        parts = [line]
+        strings = []
+        search = re.search(r'\"[^\"]*\"', line)
+        while search is not None:
+            last_part = parts.pop()
+            parts.append(last_part[:search.start()])
+            parts.append(last_part[search.end():])
+            strings.append(search.group())
+            search = re.search(r'\"[^\"]*\"', parts[len(parts) - 1])
+
+        # Handle each part separated by string literals and then put it all together
+        result = ''
+        for i in range(len(parts)):
+            self.line = re.sub(regex.REPLACE_MULTIPLE_SPACES, '', parts[i])
+            self.lookout_config()
+            self.line = re.sub(r'\s+', ' ', self.line)
+            result += self.line
+            if i < len(strings):
+                result += strings[i]
+
+        self.line = result
+
+        # Check is something changed in spaces
+        if original_line.strip() != self.line.strip():
+            print(line_num, 'WRONG SPACES\n|' + original_line + '|\n|' + self.line + '|')
+            # print(line_num, 'WRONG SPACES')
+
         return self.line
 
     def add_comment(self, comment):
@@ -65,6 +92,8 @@ class SpacesFormatter:
             elif param.startswith('spaces-around-operators-') and int(self.config.params[param]):
                 keyword = param.replace('spaces-around-operators-', '')
                 self.spaces_around_operators_by_type(keyword)
+            elif param.startswith('spaces-after-for-semicolons') and int (self.config.params[param]):
+                self.spaces_after_for_semicolons()
 
     def space_before_parentheses_method_declaration(self):
         if self._method_declaration_found:
@@ -144,3 +173,15 @@ class SpacesFormatter:
             search_regex = r'}' + keyword
             replace_str = r'} ' + keyword
             self.line = re.sub(search_regex, replace_str, self.line)
+
+    def spaces_after_for_semicolons(self):
+        first_search = re.search(regex.FOR_FIRST_SEMICOLON, self.line)
+        if first_search is not None:
+            prefix = self.line[:first_search.start()]
+            suffix = self.line[first_search.end():]
+            self.line = prefix + first_search.group().rstrip() + ' ' + suffix
+        second_search = re.search(regex.FOR_SECOND_SEMICOLON, self.line)
+        if second_search is not None:
+            prefix = self.line[:second_search.start()]
+            suffix = self.line[second_search.end():]
+            self.line = prefix + second_search.group().rstrip() + ' ' + suffix
