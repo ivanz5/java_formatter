@@ -41,7 +41,6 @@ class Formatter:
         self.content = f.readlines()
         f.close()
         self.out = open(output_filename, "w")
-        self.line_from_main_loop = True
 
     def format_file(self):
         # Iterator for input sequence
@@ -50,9 +49,11 @@ class Formatter:
         for line in self.gen_input:
             self.prev_original_line = self.original_line
             self.original_line = line
-            self.line_from_main_loop = False
+            self.start_line_num = self.line_num
             self.process_line(line)
-            self.line_from_main_loop = True
+            # Processed statement is not in one line
+            if self.start_line_num != self.line_num:
+                print(self.start_line_num, 'MULTILINE STATEMENT', self.original_line)
         # Write what is left
         if self.current_line != '':
             self.write_line()
@@ -86,18 +87,18 @@ class Formatter:
             self.current_line_from_remainder = False
 
         # Format spaces
-        self.current_line = self.spaces_formatter.format_line(self.current_line, self.line_num)
+        self.current_line = self.spaces_formatter.format_line(self.current_line, self.start_line_num)
         # Add comments to start and end of line is required
         if self.current_comment != '':
             self.current_line = self.spaces_formatter.add_comment(self.current_comment)
         if self.current_comment_line_start != '':
             # Format indents before adding comment because it can wrap comment to new line
-            self.current_line = self.indent_formatter.format_line(self.current_line, self.line_num)
+            self.current_line = self.indent_formatter.format_line(self.current_line, self.start_line_num)
             self.spaces_formatter.line = self.current_line
             self.current_line = self.spaces_formatter.add_comment_at_start(self.current_comment_line_start)
         # Format indents only if line is not completely inside comment block
         elif not self.block_comment_open:
-            self.current_line = self.indent_formatter.format_line(self.current_line, self.line_num)
+            self.current_line = self.indent_formatter.format_line(self.current_line, self.start_line_num)
         # Remove trailing '\n' from comment line
         else:
             self.current_line = self.current_line.replace('\n', '')
