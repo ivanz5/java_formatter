@@ -1,5 +1,7 @@
 CLOSING_BRACE = r'(^|\s*)}'
 
+LINE_COMMENT = r'\s*\/\/'
+
 IF = r'(^|\s+|;|{|})if\s*(\(|\n)'
 WHILE = r'(^|\s+|;|{|})while\s*(\(|\n)'
 FOR = r'(^|\s+|;|{|})for\s*(\(|\n)'

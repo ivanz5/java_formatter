@@ -32,6 +32,14 @@ class SpacesFormatter:
         self.lookout_config()
         return self.line
 
+    def add_comment(self, comment):
+        if self.line == '' and self.config != '':
+            self.line = comment
+        elif comment != '':
+            space = ' ' if int(self.config.params['spaces-before-line-comment-after-code']) else ''
+            self.line += space + comment.strip()
+        return self.line
+
     def lookout_config(self):
         for param in self.config.params:
             # Spaces before left brace

@@ -14,6 +14,8 @@ class Formatter:
     gen_input = iter("")
     # Line buffer for output
     current_line = str()
+    # Comment on current line
+    current_comment = str()
     # Current line number in original input file
     line_num = 0
 
@@ -50,19 +52,33 @@ class Formatter:
     def write_line(self):
         # Format spaces
         self.current_line = self.spaces_formatter.format_line(self.current_line)
+        # Add comment if any
+        if self.current_comment != '':
+            self.current_line = self.spaces_formatter.add_comment(self.current_comment)
         # Format indents
         self.current_line = self.indent_formatter.format_line(self.current_line, self.line_num)
         # Format (handle) blank lines. This will return None is current_line is blank.
         self.current_line = self.blank_lines_formatter.format_line(self.current_line)
+
+        # Write line to file
         if self.current_line is not None:
             self.out.write(self.current_line + '\n')
             self.out.flush()  # for debug
 
         # Clear current line and remainder
         self.current_line = ""
+        self.current_comment = ""
         self.remainder = self.remainder.strip()
 
     def process_line(self, line):
+        # Separate comment from this line
+        line = self.process_line_comment(line)
+
+        # Check if entire line was a comment and write it if yes
+        if line.strip() == '':
+            self.process_line_write(line)
+            return
+
         if self.process_closing_brace(line):
             # Do not write line because handling of '} keyword' will not be done
             # self.process_line_write(line)
@@ -98,6 +114,13 @@ class Formatter:
         self.write_line()
         self.indent_formatter.iterate()
         self.spaces_formatter.iterate()
+
+    def process_line_comment(self, line):
+        search = re.search(regex.LINE_COMMENT, line)
+        if search is not None:
+            self.current_comment = line[search.start():]
+            line = line[:search.start()]
+        return line
 
     def process_keyword_parentheses(self, line):
         """

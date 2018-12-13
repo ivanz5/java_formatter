@@ -1,12 +1,5 @@
 # Indents
 indent-size: 4
-indent-top-level-class: 1
-
-# Braces: end (of line), next-line, next-line-shift, next-line-shift-all
-braces-class: end
-braces-method: end
-braces-lambda: end
-braces-other: end
 
 # Spaces
 spaces-before-method-declaration: 0
@@ -18,7 +11,6 @@ spaces-before-switch: 0
 spaces-before-try: 1
 spaces-before-catch: 1
 spaces-before-synchronized: 1
-# spaces-before-annotation-param: 0
 spaces-around-operators-assignment: 1
 spaces-around-operators-logical: 1
 spaces-around-operators-equality: 1
@@ -42,24 +34,16 @@ spaces-before-left-brace-try: 1
 spaces-before-left-brace-catch: 1
 spaces-before-left-brace-finally: 1
 spaces-before-left-brace-synchronized: 1
-# spaces-before-left-brace-array-initializer: 1
-# spaces-before-left-brace-annotation-array-initializer: 1
 spaces-before-keywords-else: 1
 spaces-before-keywords-while: 1
 spaces-before-keywords-catch: 1
 spaces-before-keywords-finally: 1
-
-
+spaces-before-line-comment-after-code: 1
 # spaces-before-left-brace: 1
 spaces-before-keyword-else: 1
 spaces-before-keyword-while: 1
 spaces-before-keyword-catch: 1
 spaces-before-keyword-finally: 1
-# spaces-within-parentheses: 0
-#maybe remove???
-# spaces-ternary-operator: 1
-# spaces-after-comma: 1
-# spaces-after-for-semicolon: 1
 
 braces-placement-class: end-of-line
 braces-placement-method: end-of-line
@@ -83,9 +67,6 @@ blank-lines-min-before-imports: 1
 blank-lines-min-after-imports: 1
 blank-lines-min-before-class-definition: 0
 blank-lines-min-after-class-end: 1
-# blank-lines-min-after-class-header: 0
-# blank-lines-min-before-class-end: 0
 blank-lines-min-before-method-definition: 1
 blank-lines-min-after-method-end: 1
-# blank-lines-min-before-method-body: 0
 
