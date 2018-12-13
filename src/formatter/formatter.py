@@ -22,6 +22,15 @@ class Formatter:
     block_comment_open = False
     # Current line number in original input file
     line_num = 0
+    # Line number of start of current expression in input file
+    # i.e. if file has 'int\n a=5', start_line_num will indicate line of 'int'
+    # and line_num will indicate line of ' a=5' when processing will be on line ' a=5'
+    start_line_num = 0
+    # Current and previous lines in original input file
+    original_line = str()
+    prev_original_line = str()
+    # Indicates whether current line has remainder from previous
+    current_line_from_remainder = False
 
     def __init__(self, config, input_filename, output_filename):
         self.config = config
@@ -32,13 +41,18 @@ class Formatter:
         self.content = f.readlines()
         f.close()
         self.out = open(output_filename, "w")
+        self.line_from_main_loop = True
 
     def format_file(self):
         # Iterator for input sequence
         self.gen_input = iter(self.next_input())
         # Iterate input
         for line in self.gen_input:
+            self.prev_original_line = self.original_line
+            self.original_line = line
+            self.line_from_main_loop = False
             self.process_line(line)
+            self.line_from_main_loop = True
         # Write what is left
         if self.current_line != '':
             self.write_line()
@@ -47,13 +61,27 @@ class Formatter:
     def next_input(self):
         for line in self.content:
             while self.remainder is not '':
+                if self.remainder.strip() != '':
+                    self.current_line_from_remainder = True
                 s = self.remainder
                 self.remainder = ''
                 yield s
             self.line_num += 1
             yield line
 
-    def write_line(self):
+    def write_line(self, decrement_line=0):
+        # Check if remainder from previous line is being written (usually '}')
+        if decrement_line > 0:
+            self.indent_formatter.original_line = self.prev_original_line
+        else:
+            self.indent_formatter.original_line = self.original_line
+
+        # If current line starts from remainder of previous line
+        # then indent error should not be shown
+        if self.current_line_from_remainder:
+            self.indent_formatter.current_line_from_remainder = True
+            self.current_line_from_remainder = False
+
         # Format spaces
         self.current_line = self.spaces_formatter.format_line(self.current_line)
         # Add comments to start and end of line is required
@@ -137,7 +165,7 @@ class Formatter:
             self.current_line = line.strip()
         # Closing braces left in buffer and obtained line is blank, write buffer
         elif self.current_line.endswith('}') and line.strip() == '':
-            self.write_line()
+            self.write_line(1)
             self.current_line = line
         self.write_line()
         self.indent_formatter.iterate()
@@ -327,8 +355,8 @@ class Formatter:
                     line = line[brace_search.end():]
                     if state == 2 and 'class ' in out_line:
                         # Write } if there is already one in buffer because class can only be defined in new line
-                        if self.current_line == '}':
-                            self.write_line()
+                        if self.current_line.strip() == '}':
+                            self.write_line(1)
                         self.indent_formatter.found_class(self.line_num)
                         self.spaces_formatter.found_class()
                         self.blank_lines_formatter.found_class()
@@ -340,7 +368,7 @@ class Formatter:
                         # Write closing braces at the beginning of the line
                         # because they are not needed to follow method declaration
                         if '}' in self.current_line:
-                            self.write_line()
+                            self.write_line(1)
                         self.indent_formatter.found_method(self.line_num)
                         self.spaces_formatter.found_method_declaration()
                         self.blank_lines_formatter.found_method()
@@ -367,15 +395,15 @@ class Formatter:
         return True
 
     def process_closing_brace(self, line):
-        line = line.strip()
+        #line = line.strip()
         brace_search = re.match(regex.CLOSING_BRACE, line)
         # Found closing brace
         if brace_search is not None:
             # Write } if there is already one in buffer
-            if self.current_line == '}':
-                self.write_line()
+            if self.current_line.strip().endswith('}'):
+                self.write_line(1)
             self.current_line += brace_search.group()
-            self.remainder = line[brace_search.start() + 1:]
+            self.remainder = line[brace_search.end():]
             self.indent_formatter.found_closing_brace()
             self.blank_lines_formatter.found_closing_brace()
             return True
