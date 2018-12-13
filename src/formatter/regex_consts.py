@@ -1,6 +1,8 @@
 CLOSING_BRACE = r'(^|\s*)}'
 
 LINE_COMMENT = r'\s*\/\/'
+BLOCK_COMMENT_START = r'\s*\/\*'
+BLOCK_COMMENT_END = r'\*\/'
 
 IF = r'(^|\s+|;|{|})if\s*(\(|\n)'
 WHILE = r'(^|\s+|;|{|})while\s*(\(|\n)'

@@ -33,11 +33,18 @@ class SpacesFormatter:
         return self.line
 
     def add_comment(self, comment):
-        if self.line == '' and self.config != '':
+        if self.line == '' and comment != '':
             self.line = comment
         elif comment != '':
             space = ' ' if int(self.config.params['spaces-before-line-comment-after-code']) else ''
             self.line += space + comment.strip()
+        return self.line
+
+    def add_comment_at_start(self, comment):
+        if self.line == '' and comment != '':
+            self.line = comment
+        elif comment != '':
+            self.line = comment + self.line.lstrip()
         return self.line
 
     def lookout_config(self):

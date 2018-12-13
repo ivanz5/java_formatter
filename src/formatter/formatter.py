@@ -16,6 +16,10 @@ class Formatter:
     current_line = str()
     # Comment on current line
     current_comment = str()
+    # Comment at the beginning of the line (end of block comment)
+    current_comment_line_start = str()
+    # Indicates whether block comments is currently open
+    block_comment_open = False
     # Current line number in original input file
     line_num = 0
 
@@ -52,11 +56,21 @@ class Formatter:
     def write_line(self):
         # Format spaces
         self.current_line = self.spaces_formatter.format_line(self.current_line)
-        # Add comment if any
+        # Add comments to start and end of line is required
         if self.current_comment != '':
             self.current_line = self.spaces_formatter.add_comment(self.current_comment)
-        # Format indents
-        self.current_line = self.indent_formatter.format_line(self.current_line, self.line_num)
+        if self.current_comment_line_start != '':
+            # Format indents before adding comment because it can wrap comment to new line
+            self.current_line = self.indent_formatter.format_line(self.current_line, self.line_num)
+            self.spaces_formatter.line = self.current_line
+            self.current_line = self.spaces_formatter.add_comment_at_start(self.current_comment_line_start)
+        # Format indents only if line is not completely inside comment block
+        elif not self.block_comment_open:
+            self.current_line = self.indent_formatter.format_line(self.current_line, self.line_num)
+        # Remove trailing '\n' from comment line
+        else:
+            self.current_line = self.current_line.replace('\n', '')
+
         # Format (handle) blank lines. This will return None is current_line is blank.
         self.current_line = self.blank_lines_formatter.format_line(self.current_line)
 
@@ -66,13 +80,27 @@ class Formatter:
             self.out.flush()  # for debug
 
         # Clear current line and remainder
-        self.current_line = ""
-        self.current_comment = ""
+        self.current_line = ''
+        self.current_comment = ''
+        self.current_comment_line_start = ''
         self.remainder = self.remainder.strip()
 
     def process_line(self, line):
-        # Separate comment from this line
-        line = self.process_line_comment(line)
+        # Line starts with comment if comment block is open
+        if self.block_comment_open:
+            line = self.process_line_comment(line)
+            # Block is still open, write line and proceed to next one
+            if self.block_comment_open:
+                self.current_comment = line
+                self.current_line = ''
+                self.process_line_write('')
+                return
+            # Block was closed on this line
+            # current_comment_line_start was already set, process rest of the line as usual
+        # Try to find comment start
+        else:
+            # Separate comment from this line
+            line = self.process_line_comment(line)
 
         # Check if entire line was a comment and write it if yes
         if line.strip() == '':
@@ -116,10 +144,33 @@ class Formatter:
         self.spaces_formatter.iterate()
 
     def process_line_comment(self, line):
-        search = re.search(regex.LINE_COMMENT, line)
-        if search is not None:
-            self.current_comment = line[search.start():]
-            line = line[:search.start()]
+        # Search for closing block comment '*/' if opened
+        if self.block_comment_open:
+            block_end_search = re.search(regex.BLOCK_COMMENT_END, line)
+            if block_end_search is not None:
+                self.current_comment_line_start = line[:block_end_search.end()]
+                line = line[block_end_search.end():]
+                self.block_comment_open = False
+            return line
+
+        # Search for line or block comment start
+        line_search = re.search(regex.LINE_COMMENT, line)
+        block_start_search = re.search(regex.BLOCK_COMMENT_START, line)
+
+        # Check what goes first: '//' or '/*'
+        if line_search is not None and block_start_search is not None:
+            if line_search.start() < block_start_search.start():
+                block_start_search = None
+            else:
+                line_search = None
+
+        if line_search is not None:
+            self.current_comment = line[line_search.start():]
+            line = line[:line_search.start()]
+        elif block_start_search is not None:
+            self.current_comment = line[block_start_search.start():]
+            line = line[:block_start_search.start()]
+            self.block_comment_open = True
         return line
 
     def process_keyword_parentheses(self, line):
