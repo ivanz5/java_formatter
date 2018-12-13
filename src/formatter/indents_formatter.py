@@ -62,7 +62,7 @@ class IndentsFormatter:
         # No break since previous case. Need to decrease indent.
         if self._case_opened:
             self._next_level = self._current_level
-            self._current_level = self._current_level -1
+            self._current_level = self._current_level - 1
         # Break was found before this 'case'. Indent already decreased.
         else:
             self._case_opened = True
@@ -97,7 +97,7 @@ class IndentsFormatter:
             return line
         elif self.config.params.get(parameter) == 'new-line-shifted':
             line = indent + line.strip()
-            shifted_indent = ' ' * (self._current_level + 1) * self.config.indent_size
+            shifted_indent = ' ' * (self._current_level + 1) * self.config.indent_size()
             line = re.sub('\s*{', '\n' + shifted_indent + '{', line)
             return line
         return None
@@ -106,7 +106,7 @@ class IndentsFormatter:
         search = re.search(regex.WRAP_KEYWORD.replace('KEYWORD', keyword), line)
         if search is not None:
             # Indent with current level + 2
-            shifted_indent = ' ' * (self._current_level + 2) * self.config.indent_size
+            shifted_indent = ' ' * (self._current_level + 2) * self.config.indent_size()
 
             pre_line = line[:search.end()].rstrip()  # All before given keyword (including keyword itself)
             sub_line = line[search.end():].strip()  # All after given keyword
@@ -129,7 +129,7 @@ class IndentsFormatter:
 
     def format_wrap_keyword(self, line, keyword):
         # Indent with current level + 2
-        shifted_indent = ' ' * (self._current_level + 2) * self.config.indent_size
+        shifted_indent = ' ' * (self._current_level + 2) * self.config.indent_size()
         replacement = '\n' + shifted_indent + keyword + ' '
         # Add line break before keyword
         line = re.sub(regex.WRAP_KEYWORD.replace('KEYWORD', keyword), replacement, line)
@@ -138,7 +138,7 @@ class IndentsFormatter:
         return line
 
     def format_line(self, line, line_num):
-        indent = ' ' * self._current_level * self.config.indent_size
+        indent = ' ' * self._current_level * self.config.indent_size()
 
         # Add correct indent to line
         line = indent + line.strip()
@@ -195,7 +195,5 @@ class IndentsFormatter:
             line = self.format_wrap_list(line, 'implements')
         if int(self.config.params['wrap-list-throws']):
             line = self.format_wrap_list(line, 'throws')
-
-
 
         return line
