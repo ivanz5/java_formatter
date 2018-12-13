@@ -81,9 +81,13 @@ class Config:
             return 0
         return int(value)
 
-    def __init__(self, filename):
+    def __init__(self, filename=''):
         # Initialize params with default values
         self.params = self.default_params
+
+        # No file provided, just use default params
+        if filename == '':
+            return
 
         f = open(filename, 'r')
         for line in f.readlines():

@@ -13,20 +13,25 @@ def check_params():
         print("Please, provide input file by adding '-i <input_file_name>' to command")
         return False
     if config_path == '':
-        print("Please, provide config file by adding '-c <config_file_name>' to command")
-        return False
+        print("No config file provided, using default formatting settings")
     return True
 
 
 # Check if input and config files exist
-def check_files():
+def check_input_file():
     if not isfile(input_path):
-        print("This input file does not exist or is not a file")
-        return False
-    if not isfile(config_path):
-        print("This config file does not exist or is not a file")
+        print("Provided input file does not exist or is not a file")
         return False
     return True
+
+
+def get_config():
+    if not isfile(config_path):
+        if config_path != '':
+            print("Provided config file doest not exist or is not a file")
+            print("Using default formatting settings")
+        return config.Config()
+    return config.Config(config_path)
 
 
 for i in range(len(argv)):
@@ -44,7 +49,7 @@ for i in range(len(argv)):
 if output_path == '':
     output_path = input_path
 
-if check_params() and check_files():
-    conf = config.Config(config_path)
+if check_params() and check_input_file():
+    conf = get_config()
     frm = formatter.Formatter(conf, input_path, output_path)
     frm.format_file()
