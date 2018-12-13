@@ -28,7 +28,6 @@ class Formatter:
         self.indent_formatter = indents_formatter.IndentsFormatter(config)
         self.spaces_formatter = spaces_formatter.SpacesFormatter(config)
         self.blank_lines_formatter = blank_lines_formatter.BlankLinesFormatter(config)
-        print (config.indent_size, config.indent_top_level_class)
         f = open(input_filename, "r")
         self.content = f.readlines()
         f.close()
@@ -43,6 +42,7 @@ class Formatter:
         # Write what is left
         if self.current_line != '':
             self.write_line()
+        self.out.close()
 
     def next_input(self):
         for line in self.content:
