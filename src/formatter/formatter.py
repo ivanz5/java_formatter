@@ -61,6 +61,9 @@ class Formatter:
     def next_input(self):
         for line in self.content:
             while self.remainder is not '':
+                if self.remainder == '\n':
+                    self.remainder = ''
+                    break
                 if self.remainder.strip() != '':
                     self.current_line_from_remainder = True
                 s = self.remainder
@@ -83,7 +86,7 @@ class Formatter:
             self.current_line_from_remainder = False
 
         # Format spaces
-        self.current_line = self.spaces_formatter.format_line(self.current_line)
+        self.current_line = self.spaces_formatter.format_line(self.current_line, self.line_num)
         # Add comments to start and end of line is required
         if self.current_comment != '':
             self.current_line = self.spaces_formatter.add_comment(self.current_comment)
@@ -228,7 +231,7 @@ class Formatter:
         search = re.search(pattern, line)
         # When found a match, remove '{' if present so it could be correctly processed later
         if search is not None:
-            prefix = search.group().strip()
+            prefix = search.group()#.strip()
             if '{' in prefix:
                 prefix = prefix.replace('{', '')
                 line = '{' + line[search.end():]
@@ -351,7 +354,7 @@ class Formatter:
                 # Search for opening brace '{' - end of class/interface/enum/method declaration
                 brace_search = re.search(r'{', line)
                 if brace_search is not None:
-                    out_line += line[:brace_search.start() + 1].strip() + ' '
+                    out_line += line[:brace_search.start() + 1].strip()# + ' '
                     line = line[brace_search.end():]
                     if state == 2 and 'class ' in out_line:
                         # Write } if there is already one in buffer because class can only be defined in new line
@@ -410,7 +413,7 @@ class Formatter:
 
     def handle_curly_brace_line(self, prefix, line):
         # Write prefix (already found part)
-        prefix = prefix.strip()
+        #prefix = prefix.strip()
         self.current_line += prefix
         # Search for opening brace
         # Semicolon search must be before brace search in order to work correctly;

@@ -55,6 +55,9 @@ spaces-before-keywords-while: 1
 spaces-before-keywords-catch: 1
 spaces-before-keywords-finally: 1
 
+# This will add a spaces after semicolons in 'for' statement
+spaces-after-for-semicolons: 1
+
 # This will add a space before single line comment, if it takes starts not at the beginning of the line
 # e.g. 'int a = 0;// Create integer' -> 'int a = 0; // Create integer'
 spaces-before-line-comment-after-code: 1
