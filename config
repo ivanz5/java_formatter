@@ -59,7 +59,6 @@ spaces-before-keywords-finally: 1
 # e.g. 'int a = 0;// Create integer' -> 'int a = 0; // Create integer'
 spaces-before-line-comment-after-code: 1
 
-
 # braces-placement-* will place '{' brace after corresponding construction according to value provided:
 # end-of-line: '{' will be on the same line as class or method definition or other statement with '{'
 # new-line: '{' will be on next line, with same indent

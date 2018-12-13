@@ -20,6 +20,9 @@ class IndentsFormatter:
     _method_found = 0
     _brace_found = False
 
+    original_line = str()
+    current_line_from_remainder = False
+
     def __init__(self, config):
         self.config = config
 
@@ -30,6 +33,8 @@ class IndentsFormatter:
     def iterate(self):
         self._current_level = self._next_level
         self._brace_found = False
+        self.original_line = ''
+        self.current_line_from_remainder = False
 
     def found_brace(self):
         self._brace_found = True
@@ -137,8 +142,18 @@ class IndentsFormatter:
         line = re.sub(' +\n', '\n', line)
         return line
 
+    def check_original_indent(self, indent, line_num):
+        # No errors for blank lines or lines starting from remainders of previous lines
+        if self.original_line.strip() == '' or self.current_line_from_remainder:
+            return
+        original_indent = len(self.original_line) - len(self.original_line.lstrip())
+        if original_indent != len(indent):
+            print(line_num, 'WRONG INDENT', self.original_line.rstrip())
+
     def format_line(self, line, line_num):
         indent = ' ' * self._current_level * self.config.indent_size()
+
+        self.check_original_indent(indent, line_num)
 
         # Add correct indent to line
         line = indent + line.strip()

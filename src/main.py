@@ -49,6 +49,7 @@ for i in range(len(argv)):
 if output_path == '':
     output_path = input_path
 
+
 if check_params() and check_input_file():
     conf = get_config()
     frm = formatter.Formatter(conf, input_path, output_path)
