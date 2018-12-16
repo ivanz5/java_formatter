@@ -116,7 +116,9 @@ class BlankLinesFormatter:
                 buff = self.__non_blank_buffer
                 buff = buff[:len(buff) - 1]
                 self.__non_blank_buffer = ''
-                return '\n' + buff
+                old_blank_count = self.__blank_count
+                self.__blank_count = 1
+                return '\n' * min(old_blank_count - 1, self.max_blank_lines) + buff
             return None
 
         # Comment
