@@ -97,7 +97,7 @@ class Config:
                     value = line[search.end():].replace(':', '').replace(' ', '').replace('\n', '')
                     if search.group() in ['braces-placement-class', 'braces-placement-method', 'braces-placement-other']:
                         value = self.validate_braces_placement(value)
-                    else:
+                    elif search.group() != 'blank-lines-max':
                         value = self.validate_number(value)
                     self.params[search.group()] = value
 
