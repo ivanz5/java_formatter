@@ -87,6 +87,11 @@ wrap-list-extends: 0
 wrap-list-implements: 0
 wrap-list-throws: 0
 
+# blank-lines-max will remove blank lines over specified value
+# if there is a conflict between max and min lines (i.e. max<min), min is preferred
+# Integer, use negative value to disable parameter
+blank-lines-max: 3
+
 # blank-lines-min-* will add blank lines (if required) before or after corresponding code part to reach provided value
 # e.g. with 'blank-lines-min-before-imports: 2' there will be always at least 2 blank lines before imports block
 # These parameters are non-negative integers

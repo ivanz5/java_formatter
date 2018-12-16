@@ -104,7 +104,7 @@ class Formatter:
             self.current_line = self.current_line.replace('\n', '')
 
         # Format (handle) blank lines. This will return None is current_line is blank.
-        self.current_line = self.blank_lines_formatter.format_line(self.current_line)
+        self.current_line = self.blank_lines_formatter.format_line(self.current_line, self.start_line_num)
 
         # Write line to file
         if self.current_line is not None:
