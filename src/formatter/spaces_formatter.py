@@ -54,8 +54,8 @@ class SpacesFormatter:
 
         # Check is something changed in spaces
         if original_line.strip() != self.line.strip():
-            print(line_num, 'WRONG SPACES\n|' + original_line + '|\n|' + self.line + '|')
-            # print(line_num, 'WRONG SPACES')
+            #print(line_num, 'WRONG SPACES\n|' + original_line + '|\n|' + self.line + '|')
+            print(line_num, 'WRONG SPACES')
 
         return self.line
 
