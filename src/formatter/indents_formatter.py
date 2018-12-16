@@ -148,7 +148,8 @@ class IndentsFormatter:
             return
         original_indent = len(self.original_line) - len(self.original_line.lstrip())
         if original_indent != len(indent):
-            print(line_num, 'WRONG INDENT', self.original_line.rstrip())
+            # print(line_num, 'WRONG INDENT', self.original_line.rstrip())
+            print(line_num, 'WRONG INDENT')
 
     def format_line(self, line, line_num):
         indent = ' ' * self._current_level * self.config.indent_size()

@@ -53,7 +53,8 @@ class Formatter:
             self.process_line(line)
             # Processed statement is not in one line
             if self.start_line_num != self.line_num:
-                print(self.start_line_num, 'MULTILINE STATEMENT', self.original_line)
+                # print(self.start_line_num, 'MULTILINE STATEMENT', self.original_line)
+                print(self.start_line_num, 'MULTILINE STATEMENT')
         # Write what is left
         if self.current_line != '':
             self.write_line()
