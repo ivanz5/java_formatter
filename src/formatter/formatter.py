@@ -153,6 +153,9 @@ class Formatter:
         if self.process_for(line):
             self.process_line_write(line)
             return
+        if self.process_annotation(line):
+            self.process_line_write(line)
+            return
         if self.process_case(line, False):  # 'case'
             self.process_line_write(line)
             return
@@ -205,6 +208,18 @@ class Formatter:
             line = line[:block_start_search.start()]
             self.block_comment_open = True
         return line
+
+    def process_annotation(self, line):
+        search = re.search(r'@', line)
+        if search is not None:
+            pattern = r'@[^\s]+'
+            if '(' in line and ')' in line:
+                pattern = r'@.*\)'
+            search = re.search(pattern, line)
+            if search is not None:
+                self.current_line += search.group()
+                self.remainder = line[search.end():].strip()
+                return True
 
     def process_keyword_parentheses(self, line):
         """
@@ -435,7 +450,7 @@ class Formatter:
             line = line[semicolon_search.start() + 1:]
             self.current_line += s
             self.remainder = line
-            self.indent_formatter.found_simple_operator(prefix == "")
+            # self.indent_formatter.found_simple_operator(prefix == "")
         # Continue search on new line
         else:
             line = line.strip()

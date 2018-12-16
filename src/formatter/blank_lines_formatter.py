@@ -20,6 +20,9 @@ class BlankLinesFormatter:
     __class_found = 0
     __method_found = 0
 
+    # Comments and annotations will be stored here to write them immediately before method or class
+    __non_blank_buffer = ''
+
     # For counting balance between { and }
     # Holds tuples of ('construction', int()), where construction is one of __last_construction possibilities
     # and int() is number of open braces '{' in current construction.
@@ -109,6 +112,16 @@ class BlankLinesFormatter:
         # Blank lines will be saved and written with next non-blank line (after correction their count).
         if line.strip() == '':
             self.__blank_count += 1
+            if self.__non_blank_buffer != '':
+                buff = self.__non_blank_buffer
+                buff = buff[:len(buff) - 1]
+                self.__non_blank_buffer = ''
+                return '\n' + buff
+            return None
+
+        # Comment
+        if line.strip().startswith('//') or line.strip().startswith('@'):
+            self.__non_blank_buffer += line + '\n'
             return None
 
         word = self.get_trigger_word(line)
@@ -116,7 +129,7 @@ class BlankLinesFormatter:
         if word == 'package':
             before_package = self.int_config('blank-lines-min-before-package')
             blank_lines = self.get_blank_lines(line_num, 0, before_package)
-            line = blank_lines + line
+            line = blank_lines + self.__non_blank_buffer + line
             self.__last_construction = 'package'
         # Import statement
         elif word == 'import':
@@ -128,12 +141,12 @@ class BlankLinesFormatter:
                 after_package = self.int_config('blank-lines-min-after-package')
                 before_imports = self.int_config('blank-lines-min-before-imports')
                 blank_lines = self.get_blank_lines(line_num, after_package, before_imports)
-                line = blank_lines + line
+                line = blank_lines + self.__non_blank_buffer + line
             # No preceding package block
             else:
                 before_imports = self.int_config('blank-lines-min-before-imports')
                 blank_lines = self.get_blank_lines(line_num, before_imports)
-                line = blank_lines + line
+                line = blank_lines + self.__non_blank_buffer + line
             self.__last_construction = 'import'
         # Class definition
         elif word == 'class':
@@ -144,24 +157,24 @@ class BlankLinesFormatter:
                 after_package = self.int_config('blank-lines-min-after-package')
                 before_class = self.int_config('blank-lines-min-before-class-definition')
                 blank_lines = self.get_blank_lines(line_num, after_package, before_class)
-                line = blank_lines + line
+                line = blank_lines + self.__non_blank_buffer + line
             # Class after imports
             elif self.__last_construction == 'import':
                 after_imports = self.int_config('blank-lines-min-after-imports')
                 before_class = self.int_config('blank-lines-min-before-class-definition')
                 blank_lines = self.get_blank_lines(line_num, after_imports, before_class)
-                line = blank_lines + line
+                line = blank_lines + self.__non_blank_buffer + line
             # Class after method end
             elif self.__last_construction == 'method-end':
                 after_method = self.int_config('blank-lines-min-after-method-end')
                 before_class = self.int_config('blank-lines-min-before-class-definition')
                 blank_lines = self.get_blank_lines(line_num, after_method, before_class)
-                line = blank_lines + line
+                line = blank_lines + self.__non_blank_buffer + line
             # Other position of class definition
             else:
                 before_class = self.int_config('blank-lines-min-before-class-definition')
                 blank_lines = self.get_blank_lines(line_num, before_class)
-                line = blank_lines + line
+                line = blank_lines + self.__non_blank_buffer + line
             self.__last_construction = 'class'
         # Method definition
         elif word == 'method':
@@ -172,42 +185,43 @@ class BlankLinesFormatter:
                 after_class = self.int_config('blank-lines-min-after-class-end')
                 before_method = self.int_config('blank-lines-min-before-method-definition')
                 blank_lines = self.get_blank_lines(line_num, after_class, before_method)
-                line = blank_lines + line
+                line = blank_lines + self.__non_blank_buffer + line
             # Method after method end
             elif self.__last_construction == 'method-end':
                 after_class = self.int_config('blank-lines-min-after-method-end')
                 before_method = self.int_config('blank-lines-min-before-method-definition')
                 blank_lines = self.get_blank_lines(line_num, after_class, before_method)
-                line = blank_lines + line
+                line = blank_lines + self.__non_blank_buffer + line
             # Other position of method definition
             else:
                 before_method = self.int_config('blank-lines-min-before-method-definition')
                 blank_lines = self.get_blank_lines(line_num, before_method)
-                line = blank_lines + line
+                line = blank_lines + self.__non_blank_buffer + line
             self.__last_construction = 'method'
         # Next goes any other code (like statements, expressions, fields, etc.)
         # Code after end of class. Without checking for just found class end it will add line before }.
         elif not self.__class_end_just_found and self.__last_construction == 'class-end':
             after_class = self.int_config('blank-lines-min-after-class-end')
             blank_lines = self.get_blank_lines(line_num, after_class)
-            line = blank_lines + line
+            line = blank_lines + self.__non_blank_buffer + line
             # Reset last construction to avoid repeating class-end logic
             self.__last_construction = ''
         # Code after end of method. Without checking for just found method end it will add line before }.
         elif not self.__method_end_just_found and self.__last_construction == 'method-end':
             after_method = self.int_config('blank-lines-min-after-method-end')
             blank_lines = self.get_blank_lines(line_num, after_method)
-            line = blank_lines + line
+            line = blank_lines + self.__non_blank_buffer + line
             # Reset last construction to avoid repeating method-end logic
             self.__last_construction = ''
         # Any other case
         else:
             blank_lines = self.get_blank_lines(line_num)
-            line = blank_lines + line
+            line = blank_lines + self.__non_blank_buffer + line
 
         self.__blank_count = 0
         self.__method_end_just_found = False
         self.__class_end_just_found = False
+        self.__non_blank_buffer = ''
         return line
 
 

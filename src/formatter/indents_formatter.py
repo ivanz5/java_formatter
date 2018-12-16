@@ -56,8 +56,9 @@ class IndentsFormatter:
 
     # Single command if, while, for
     def found_simple_operator(self, new_line):
-        if new_line:
-            self._next_level = self._current_level + 1
+        pass
+        #if new_line:
+        #    self._next_level = self._current_level + 1
 
     def found_switch(self):
         self._switch_opened += 1
