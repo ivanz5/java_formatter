@@ -1,0 +1,106 @@
+# This file contains all formatter parameters, that can be customized
+# This is also a valid config file which you can use to run formatter
+
+# The order of parameters does not matter
+# Any parameters not listed below will take no effect
+# If some parameter is missing, default value will be used
+
+# All parameters are boolean, where not stated else. 0 is false, 1 is true.
+
+# Indent size, should be non-negative integer
+indent-size: 4
+
+# spaces-before-* below will add one space before '(' in corresponding statement
+spaces-before-method-declaration: 0
+spaces-before-method-call: 0
+spaces-before-if: 1
+spaces-before-for: 1
+spaces-before-while: 1
+spaces-before-switch: 0
+spaces-before-try: 1
+spaces-before-catch: 1
+spaces-before-synchronized: 1
+
+# spaces-around-operators-* below will add one space before and after corresponding operators
+spaces-around-operators-assignment: 1
+spaces-around-operators-logical: 1
+spaces-around-operators-equality: 1
+spaces-around-operators-relational: 1
+spaces-around-operators-bitwise: 1
+spaces-around-operators-additive: 1
+spaces-around-operators-multiplicative: 1
+spaces-around-operators-shift: 1
+spaces-around-operators-unary: 1
+spaces-around-operators-lambda-arrow: 1
+spaces-around-operators-double-colon: 1
+
+# spaces-before-left-brace-* below will add one space before '{' in corresponding statement or construction
+spaces-before-left-brace-class: 1
+spaces-before-left-brace-method: 1
+spaces-before-left-brace-if: 1
+spaces-before-left-brace-else: 1
+spaces-before-left-brace-for: 1
+spaces-before-left-brace-while: 1
+spaces-before-left-brace-do: 1
+spaces-before-left-brace-switch: 1
+spaces-before-left-brace-try: 1
+spaces-before-left-brace-catch: 1
+spaces-before-left-brace-finally: 1
+spaces-before-left-brace-synchronized: 1
+
+# spaces-before-keywords-* below will add one space between '}' and corresponding keyword
+# e.g. '}else' -> '} else'
+spaces-before-keywords-else: 1
+spaces-before-keywords-while: 1
+spaces-before-keywords-catch: 1
+spaces-before-keywords-finally: 1
+
+# This will add a spaces after semicolons in 'for' statement
+spaces-after-for-semicolons: 1
+
+# This will add a space before single line comment, if it takes starts not at the beginning of the line
+# e.g. 'int a = 0;// Create integer' -> 'int a = 0; // Create integer'
+spaces-before-line-comment-after-code: 1
+
+# braces-placement-* will place '{' brace after corresponding construction according to value provided:
+# end-of-line: '{' will be on the same line as class or method definition or other statement with '{'
+# new-line: '{' will be on next line, with same indent
+# new-line-shifted: '{' will be on next line, with increased indent by 1 level
+braces-placement-class: end-of-line
+braces-placement-method: end-of-line
+braces-placement-other: end-of-line
+
+# keyword-on-new-line-* will put corresponding keyword on new line in code like this: '} keyword'
+# e.g. '} else' -> '}\nelse'
+keyword-on-new-line-else: 0
+keyword-on-new-line-while: 1
+keyword-on-new-line-catch: 0
+keyword-on-new-line-finally: 0
+
+# wrap-keyword-* will place corresponding keyword in class/method declaration on new line
+wrap-keyword-extends: 0
+wrap-keyword-implements: 0
+wrap-keyword-throws: 0
+# wrap-keyword-* will place extends/implements/throws list 1 item per line
+# e.g. in 'class S implements A, B, C' A, B and C will not be in the same line
+wrap-list-extends: 0
+wrap-list-implements: 0
+wrap-list-throws: 0
+
+# blank-lines-max will remove blank lines over specified value
+# if there is a conflict between max and min lines (i.e. max<min), min is preferred
+# Integer, use negative value to disable parameter
+blank-lines-max: 3
+
+# blank-lines-min-* will add blank lines (if required) before or after corresponding code part to reach provided value
+# e.g. with 'blank-lines-min-before-imports: 2' there will be always at least 2 blank lines before imports block
+# These parameters are non-negative integers
+blank-lines-min-before-package: 0
+blank-lines-min-after-package: 1
+blank-lines-min-before-imports: 1
+blank-lines-min-after-imports: 1
+blank-lines-min-before-class-definition: 0
+blank-lines-min-after-class-end: 1
+blank-lines-min-before-method-definition: 1
+blank-lines-min-after-method-end: 1
+
